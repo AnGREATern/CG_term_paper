@@ -19,7 +19,7 @@ fn main() -> eframe::Result {
     eframe::run_native(
         "My egui App",
         options,
-        Box::new(|cc| {
+        Box::new(|_cc| {
             // // This gives us image support:
             // egui_extras::install_image_loaders(&cc.egui_ctx);
 

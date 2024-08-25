@@ -20,31 +20,58 @@ impl Default for Painting {
 impl eframe::App for Painting {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         CentralPanel::default().show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.label("Stroke:");
-                ui.add(&mut self.stroke);
-                ui.separator();
-                if ui.button("Clear Painting").clicked() {
-                    self.lines.clear();
-                }
-            })
-            .response;
+        //     ui.horizontal(|ui| {
+                // ui.label("Base window");
+        //         ui.add(&mut self.stroke);
+        //         ui.separator();
+        //         if ui.button("Clear Painting").clicked() {
+        //             self.lines.clear();
+        //         }
+        //     })
+        //     .response;
+
+        self.ui_control(ui);
+        ui.label("Paint with your mouse/touch!");
+        Frame::canvas(ui.style()).show(ui, |ui| {
+            self.ui_content(ui);
+        });
+
+            // if ctx.input(|i| i.key_pressed(Key::Space)) {
+            //     let mut open = true;
+            //     self.a_handler(ctx, &mut open);
+            // }
         });
     }
 }
 
 impl Painting {
-    // pub fn ui_control(&mut self, ui: &mut Ui) -> Response {
-    //     ui.horizontal(|ui| {
-    //         ui.label("Stroke:");
-    //         ui.add(&mut self.stroke);
-    //         ui.separator();
-    //         if ui.button("Clear Painting").clicked() {
-    //             self.lines.clear();
-    //         }
-    //     })
-    //     .response
+    // fn ui(&mut self, ui: &mut Ui) {
+    //     self.ui_control(ui);
+    //     ui.label("Paint with your mouse/touch!");
+    //     Frame::canvas(ui.style()).show(ui, |ui| {
+    //         self.ui_content(ui);
+    //     });
     // }
+
+    // fn a_handler(&mut self, ctx: &Context, open: &mut bool) {
+    //     Window::new("Wow")
+    //         .open(open)
+    //         .default_size(vec2(512.0, 512.0))
+    //         .vscroll(false)
+    //         .show(ctx, |ui| self.ui(ui));
+    // }
+
+    pub fn ui_control(&mut self, ui: &mut Ui) -> Response {
+        ui.horizontal(|ui| {
+            ui.label("Stroke:");
+            ui.add(&mut self.stroke);
+            ui.separator();
+            if ui.button("Clear Painting").clicked() {
+                self.lines.clear();
+            }
+        })
+        .response
+    }
 
     pub fn ui_content(&mut self, ui: &mut Ui) -> Response {
         let (mut response, painter) =
@@ -86,32 +113,19 @@ impl Painting {
 
         response
     }
+
+    // pub fn ui_try(&mut self, ui: &mut Ui) -> Response {
+    //     let size = ui.available_size_before_wrap();
+    //     let (mut response, painter) =
+    //         ui.allocate_painter(size, Sense::drag());
+    //     let rect = response.rect;
+    //     let c = rect.center();
+    //     let r = rect.width() / 2.0 - 1.0;
+    //     let color = Color32::from_gray(128);
+    //     let stroke = Stroke::new(1.0, color);
+
+    //     painter.add(shape)
+
+    //     response
+    // }
 }
-
-// impl crate::Demo for Painting {
-//     fn name(&self) -> &'static str {
-//         "🖊 Painting"
-//     }
-
-//     fn show(&mut self, ctx: &Context, open: &mut bool) {
-//         use crate::View as _;
-//         Window::new(self.name())
-//             .open(open)
-//             .default_size(vec2(512.0, 512.0))
-//             .vscroll(false)
-//             .show(ctx, |ui| self.ui(ui));
-//     }
-// }
-
-// impl crate::View for Painting {
-//     fn ui(&mut self, ui: &mut Ui) {
-//         ui.vertical_centered(|ui| {
-//             ui.add(crate::egui_github_link_file!());
-//         });
-//         self.ui_control(ui);
-//         ui.label("Paint with your mouse/touch!");
-//         Frame::canvas(ui.style()).show(ui, |ui| {
-//             self.ui_content(ui);
-//         });
-//     }
-// }
