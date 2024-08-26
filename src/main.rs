@@ -3,12 +3,12 @@
 
 use eframe::egui;
 
-// mod my_app;
-// use my_app::MyApp;
 mod consts;
-use consts::*;
+mod app;
 mod canvas;
-use canvas::Painting;
+
+use consts::*;
+use app::Painting;
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -17,7 +17,7 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     eframe::run_native(
-        "My egui App",
+        "Canva",
         options,
         Box::new(|_cc| {
             // // This gives us image support:
