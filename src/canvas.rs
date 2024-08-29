@@ -6,9 +6,9 @@ pub struct Canvas {
 }
 
 impl Canvas {
-    pub fn new(width: u32, height: u32) -> Self {
+    pub fn new(width: u32, height: u32, color: u8) -> Self {
         // let frame = vec![vec![0; height as usize]; width as usize];
-        let frame = vec![123; (4 * height * width) as usize];
+        let frame = vec![color; (4 * height * width) as usize];
         Self {
             frame,
             width,
