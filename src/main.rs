@@ -3,12 +3,12 @@
 
 use eframe::egui;
 
-mod consts;
 mod app;
 mod canvas;
+mod consts;
 
-use consts::*;
 use app::Painting;
+use consts::*;
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).

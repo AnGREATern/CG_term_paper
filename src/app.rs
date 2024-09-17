@@ -3,23 +3,21 @@ use crate::egui::*;
 use crate::canvas::Canvas;
 
 pub struct Painting {
-    canvas: Canvas
+    canvas: Canvas,
 }
 
 impl Default for Painting {
     fn default() -> Self {
         let canvas = Canvas::new(500, 500, 255);
-        Self {
-            canvas
-        }
+        Self { canvas }
     }
 }
 
 impl eframe::App for Painting {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         CentralPanel::default().show(ctx, |ui| {
-        self.ui_menus(ui);
-        self.ui_canvas(ui);
+            self.ui_menus(ui);
+            self.ui_canvas(ui);
         });
     }
 }
@@ -28,8 +26,7 @@ impl Painting {
     fn ui_menus(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
             ui.menu_button("Click for menu", |ui| self.nested_menus(ui));
-            }
-        );
+        });
     }
 
     fn nested_menus(&mut self, ui: &mut Ui) {
@@ -72,10 +69,7 @@ impl Painting {
         let (response, painter) =
             ui.allocate_painter(ui.available_size_before_wrap(), Sense::drag());
 
-        let image = ColorImage::from_rgba_unmultiplied(
-            [500, 500],
-            self.canvas.frame(),
-        );
+        let image = ColorImage::from_rgba_unmultiplied([500, 500], self.canvas.frame());
 
         let texture = painter
             .ctx()
@@ -87,7 +81,7 @@ impl Painting {
             Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
             Color32::WHITE,
         );
-        painter.add(Shape::mesh(mesh)); 
+        painter.add(Shape::mesh(mesh));
 
         response
     }
