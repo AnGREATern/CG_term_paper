@@ -1,8 +1,10 @@
 use std::mem::swap;
 
 use crate::egui::{
-    CentralPanel, Color32, ColorImage, Context, Mesh, Pos2, Rect, Response, Sense, Shape, Ui,
+    emath, epaint::PathShape, CentralPanel, Color32, ColorImage, Context, Mesh, Pos2, Rect,
+    Response, Sense, Shape, Ui,
 };
+use crate::figure::graph::Graph;
 use rfd::FileDialog;
 
 use crate::canvas::Canvas;
@@ -11,6 +13,8 @@ use crate::WINDOW_SIZE;
 pub struct Painting {
     is_start_obj_loaded: bool,
     is_result_obj_loaded: bool,
+    start_obj: Option<Graph>,
+    result_obj: Option<Graph>,
     canvas: Canvas,
 }
 
@@ -18,10 +22,14 @@ impl Default for Painting {
     fn default() -> Self {
         let is_start_obj_loaded = false;
         let is_result_obj_loaded = false;
+        let start_obj = None;
+        let result_obj = None;
         let canvas = Canvas::new(WINDOW_SIZE.0, WINDOW_SIZE.1, 255);
         Self {
             is_start_obj_loaded,
             is_result_obj_loaded,
+            start_obj,
+            result_obj,
             canvas,
         }
     }
@@ -63,20 +71,26 @@ impl Painting {
         ui.set_max_width(150.0); // To make sure we wrap long text
 
         if ui.button(self.button_load_start_label()).clicked() {
-            if let Some(object_path) = FileDialog::new().add_filter("obj", &["obj"]).pick_file() {
-                self.is_start_obj_loaded = true;
-            } else {
-                self.is_start_obj_loaded = false;
+            if let Some(filename) = FileDialog::new().add_filter("obj", &["obj"]).pick_file() {
+                let loading = Graph::load(filename.to_str().unwrap_or(""));
+                if loading.is_ok() {
+                    self.start_obj = Some(loading.unwrap());
+                }
             }
+            self.is_start_obj_loaded = self.start_obj.is_some();
+            println!("{:?}", self.start_obj.as_mut().unwrap().vertexes[0].x);
         }
         if ui.button(self.button_load_result_label()).clicked() {
-            if let Some(object_path) = FileDialog::new().add_filter("obj", &["obj"]).pick_file() {
-                self.is_result_obj_loaded = true;
-            } else {
-                self.is_result_obj_loaded = false;
+            if let Some(filename) = FileDialog::new().add_filter("obj", &["obj"]).pick_file() {
+                let loading = Graph::load(filename.to_str().unwrap_or(""));
+                if loading.is_ok() {
+                    self.result_obj = Some(loading.unwrap());
+                }
             }
+            self.is_result_obj_loaded = self.result_obj.is_some();
         }
         if ui.button("Swap objects").clicked() {
+            swap(&mut self.start_obj, &mut self.result_obj);
             swap(
                 &mut self.is_start_obj_loaded,
                 &mut self.is_result_obj_loaded,
@@ -104,6 +118,13 @@ impl Painting {
             Color32::WHITE,
         );
         painter.add(Shape::mesh(mesh));
+
+        // let to_screen = emath::RectTransform::from_to(
+        //     Rect::from_min_size(Pos2::ZERO, response.rect.size()),
+        //     response.rect,
+        // );
+
+        // painter.add(PathShape::line(self.canvas.frame(), self.aux_stroke));
 
         response
     }
