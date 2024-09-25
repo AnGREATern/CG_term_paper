@@ -13,6 +13,7 @@ use crate::WINDOW_SIZE;
 pub struct Painting {
     is_start_obj_loaded: bool,
     is_result_obj_loaded: bool,
+    is_start_obj_viewed: bool,
     start_obj: Option<Graph>,
     result_obj: Option<Graph>,
     canvas: Canvas,
@@ -22,12 +23,14 @@ impl Default for Painting {
     fn default() -> Self {
         let is_start_obj_loaded = false;
         let is_result_obj_loaded = false;
+        let is_start_obj_viewed = true;
         let start_obj = None;
         let result_obj = None;
         let canvas = Canvas::new(WINDOW_SIZE.0, WINDOW_SIZE.1, 255);
         Self {
             is_start_obj_loaded,
             is_result_obj_loaded,
+            is_start_obj_viewed,
             start_obj,
             result_obj,
             canvas,
@@ -61,10 +64,38 @@ impl Painting {
         }
     }
 
+    fn button_view_start_obj_label(&self) -> &'static str {
+        if self.is_start_obj_viewed {
+            "Start object ✅"
+        } else {
+            "Start object"
+        }
+    }
+
+    fn button_view_result_obj_label(&self) -> &'static str {
+        if self.is_start_obj_viewed {
+            "Result object"
+        } else {
+            "Result object ✅"
+        }
+    }
+
     fn ui_menus(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
             ui.menu_button("Load objects", |ui| self.load_obj_nested_menus(ui));
+            ui.menu_button("View", |ui| self.view_nested_menus(ui));
         });
+    }
+
+    fn view_nested_menus(&mut self, ui: &mut Ui) {
+        ui.set_max_width(150.0); // To make sure we wrap long text
+        
+        if ui.button(self.button_view_start_obj_label()).clicked() {
+            self.is_start_obj_viewed = true;
+        }
+        if ui.button(self.button_view_result_obj_label()).clicked() {
+            self.is_start_obj_viewed = false;
+        }
     }
 
     fn load_obj_nested_menus(&mut self, ui: &mut Ui) {
@@ -78,7 +109,6 @@ impl Painting {
                 }
             }
             self.is_start_obj_loaded = self.start_obj.is_some();
-            println!("{:?}", self.start_obj.as_mut().unwrap().vertexes[0].x);
         }
         if ui.button(self.button_load_result_label()).clicked() {
             if let Some(filename) = FileDialog::new().add_filter("obj", &["obj"]).pick_file() {
