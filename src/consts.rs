@@ -1,1 +1,1 @@
-pub const WINDOW_SIZE: (f32, f32) = (500., 500.);
+pub const WINDOW_SIZE: (u32, u32) = (500, 500);
