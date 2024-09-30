@@ -89,7 +89,7 @@ impl Painting {
 
     fn view_nested_menus(&mut self, ui: &mut Ui) {
         ui.set_max_width(150.0); // To make sure we wrap long text
-        
+
         if ui.button(self.button_view_start_obj_label()).clicked() {
             self.is_start_obj_viewed = true;
         }
@@ -109,6 +109,15 @@ impl Painting {
                 }
             }
             self.is_start_obj_loaded = self.start_obj.is_some();
+            /////////
+            // Start temp
+            if self.is_result_obj_loaded {
+                // self.start_obj.as_ref().unwrap().draw();
+                self.draw_obj();
+            }
+            // End
+            /////////
+            // self.is_start_obj_viewed = true;
         }
         if ui.button(self.button_load_result_label()).clicked() {
             if let Some(filename) = FileDialog::new().add_filter("obj", &["obj"]).pick_file() {
@@ -118,6 +127,7 @@ impl Painting {
                 }
             }
             self.is_result_obj_loaded = self.result_obj.is_some();
+            // self.is_start_obj_viewed = false;
         }
         if ui.button("Swap objects").clicked() {
             swap(&mut self.start_obj, &mut self.result_obj);
@@ -126,6 +136,10 @@ impl Painting {
                 &mut self.is_result_obj_loaded,
             );
         }
+    }
+
+    fn draw_obj(&mut self) {
+        self.canvas = Canvas::new(WINDOW_SIZE.0, WINDOW_SIZE.1, 0);
     }
 
     fn ui_canvas(&self, ui: &mut Ui) -> Response {

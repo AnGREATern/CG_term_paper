@@ -47,6 +47,12 @@ impl Graph {
         Ok(Self::new(vertexes, faces))
     }
 
+    // pub fn draw(&self) {
+    //     for face in &self.faces {
+
+    //     }
+    // }
+
     // pub fn add_edge(&mut self, from: usize, to: usize) {
     //     self.edges[from].push(to);
     //     if !self.is_directed {
