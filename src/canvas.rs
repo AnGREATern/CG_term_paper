@@ -1,22 +1,116 @@
+use std::{i32::MIN, mem::swap};
+
+use crate::figure::{object::Object, vertex::Vertex};
+
 pub struct Canvas {
-    // frame: Vec<Vec<u8>>,
     frame: Vec<u8>,
     width: u32,
     height: u32,
+    background_color: u8,
+    zbuffer: Vec<i32>,
+    light_direction: Vertex,
 }
 
 impl Canvas {
-    pub fn new(width: u32, height: u32, color: u8) -> Self {
-        // let frame = vec![vec![0; height as usize]; width as usize];
-        let frame = vec![color; (4 * height * width) as usize];
+    pub fn new(width: u32, height: u32, background_color: u8) -> Self {
+        let frame = vec![background_color; (4 * height * width) as usize];
+        let zbuffer = vec![MIN; (height * width) as usize];
+        let light_direction = Vertex::new(0., 0., -1.);
         Self {
             frame,
             width,
             height,
+            background_color,
+            zbuffer,
+            light_direction,
         }
     }
 
     pub fn frame(&self) -> &[u8] {
         &self.frame.as_slice()
+    }
+
+    pub fn clear(&mut self) {
+        self.frame = vec![self.background_color; (4 * self.height * self.width) as usize];
+        self.zbuffer = vec![MIN; (self.height * self.width) as usize];
+    }
+
+    pub fn draw_object(&mut self, object: &Object) {
+        let color = object.color();
+        for face_ind in 0..object.nfaces() {
+            let world_coords = object.face(face_ind);
+            let mut n = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
+            n.normalize();
+            let intensity = self.light_direction * n;
+            if intensity > 0. {
+                let screen_coords = vec![
+                    world_coords[0].world_to_screen(self.height, self.width),
+                    world_coords[1].world_to_screen(self.height, self.width),
+                    world_coords[2].world_to_screen(self.height, self.width),
+                ];
+                let mut cur_color = color.clone();
+                cur_color[0] = (cur_color[0] as f64 * intensity) as u8;
+                cur_color[1] = (cur_color[1] as f64 * intensity) as u8;
+                cur_color[2] = (cur_color[2] as f64 * intensity) as u8;
+                self.draw_triangle(screen_coords, &cur_color);
+            }
+        }
+        // Возвращать Result желательно
+    }
+}
+
+impl Canvas {
+    fn draw_triangle(&mut self, mut coords: Vec<Vertex>, color: &[u8; 4]) {
+        if coords[0].y == coords[1].y && coords[1].y == coords[2].y {
+            return;
+        }
+
+        coords.sort_by(|a, b| a.y.partial_cmp(&b.y).expect("draw_triangle: sorting"));
+        let total_height = (coords[2].y - coords[0].y) as i32;
+        for i in 0..total_height {
+            let is_second_half =
+                (i > (coords[1].y - coords[0].y) as i32) || (coords[1].y == coords[0].y);
+            let segment_height = if is_second_half {
+                coords[2].y - coords[1].y
+            } else {
+                coords[1].y - coords[0].y
+            };
+            let alpha = i as f64 / total_height as f64;
+            let beta = if is_second_half {
+                (i as f64 - coords[1].y + coords[0].y) / segment_height
+            } else {
+                i as f64 / segment_height
+            };
+            let mut a = coords[0] + (coords[2] - coords[0]) * alpha;
+            let mut b = if is_second_half {
+                coords[1] + (coords[2] - coords[1]) * beta
+            } else {
+                coords[0] + (coords[1] - coords[0]) * beta
+            };
+            a.round();
+            b.round();
+            if a.x > b.x {
+                swap(&mut a, &mut b);
+            }
+            for j in a.x as i32..=b.x as i32 {
+                let phi = if a.x == b.x {
+                    1.
+                } else {
+                    (j as f64 - a.x) / (b.x - a.x)
+                };
+                let mut p = a + (b - a) * phi;
+                p.round();
+                let idx = (p.x as u32 + p.y as u32 * self.width) as usize;
+                if self.zbuffer[idx] < p.z as i32 {
+                    self.zbuffer[idx] = p.z as i32;
+                    self.set_pixel(p.x.round() as u32, p.y.round() as u32, color);
+                }
+            }
+        }
+    }
+
+    fn set_pixel(&mut self, x: u32, y: u32, color: &[u8; 4]) {
+        let pixel = 4 * (x + y * self.width) as usize;
+        self.frame[pixel..pixel + 4].copy_from_slice(color);
     }
 }

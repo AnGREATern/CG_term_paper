@@ -1,36 +1,37 @@
 use std::mem::swap;
 
 use crate::egui::{
-    emath, epaint::PathShape, CentralPanel, Color32, ColorImage, Context, Mesh, Pos2, Rect,
-    Response, Sense, Shape, Ui,
+    widgets::color_picker, CentralPanel, Color32, ColorImage, Context, Mesh, Pos2, Rect, Response,
+    Sense, Shape, Ui,
 };
-use crate::figure::graph::Graph;
+use crate::figure::object::Object;
+use eframe::egui::color_picker::Alpha;
 use rfd::FileDialog;
 
 use crate::canvas::Canvas;
 use crate::WINDOW_SIZE;
 
 pub struct Painting {
-    is_start_obj_loaded: bool,
-    is_result_obj_loaded: bool,
-    start_obj: Option<Graph>,
-    result_obj: Option<Graph>,
+    is_start_obj_viewed: bool,
+    start_obj: Option<Object>,
+    result_obj: Option<Object>,
     canvas: Canvas,
+    obj_color: Color32,
 }
 
 impl Default for Painting {
     fn default() -> Self {
-        let is_start_obj_loaded = false;
-        let is_result_obj_loaded = false;
+        let is_start_obj_viewed = true;
         let start_obj = None;
         let result_obj = None;
         let canvas = Canvas::new(WINDOW_SIZE.0, WINDOW_SIZE.1, 255);
+        let obj_color = Color32::WHITE;
         Self {
-            is_start_obj_loaded,
-            is_result_obj_loaded,
+            is_start_obj_viewed,
             start_obj,
             result_obj,
             canvas,
+            obj_color,
         }
     }
 }
@@ -46,7 +47,7 @@ impl eframe::App for Painting {
 
 impl Painting {
     fn button_load_start_label(&self) -> &'static str {
-        if self.is_start_obj_loaded {
+        if self.start_obj.is_some() {
             "Start object loaded ✅"
         } else {
             "Load start object..."
@@ -54,17 +55,56 @@ impl Painting {
     }
 
     fn button_load_result_label(&self) -> &'static str {
-        if self.is_result_obj_loaded {
+        if self.result_obj.is_some() {
             "Result object loaded ✅"
         } else {
             "Load result object..."
         }
     }
 
+    fn button_view_start_obj_label(&self) -> &'static str {
+        if self.is_start_obj_viewed {
+            "Start object ✅"
+        } else {
+            "Start object"
+        }
+    }
+
+    fn button_view_result_obj_label(&self) -> &'static str {
+        if self.is_start_obj_viewed {
+            "Result object"
+        } else {
+            "Result object ✅"
+        }
+    }
+
     fn ui_menus(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
             ui.menu_button("Load objects", |ui| self.load_obj_nested_menus(ui));
+            ui.menu_button("View", |ui| self.view_nested_menus(ui));
+            ui.menu_button("Pick color", |ui| self.pick_color_nested_menus(ui));
         });
+    }
+
+    fn pick_color_nested_menus(&mut self, ui: &mut Ui) {
+        color_picker::color_picker_color32(ui, &mut self.obj_color, Alpha::Opaque);
+    }
+
+    fn view_nested_menus(&mut self, ui: &mut Ui) {
+        ui.set_max_width(150.0); // To make sure we wrap long text
+
+        if ui.button(self.button_view_start_obj_label()).clicked() {
+            if !self.is_start_obj_viewed {
+                self.is_start_obj_viewed = true;
+                self.draw_object();
+            }
+        }
+        if ui.button(self.button_view_result_obj_label()).clicked() {
+            if self.is_start_obj_viewed {
+                self.is_start_obj_viewed = false;
+                self.draw_object();
+            }
+        }
     }
 
     fn load_obj_nested_menus(&mut self, ui: &mut Ui) {
@@ -72,29 +112,44 @@ impl Painting {
 
         if ui.button(self.button_load_start_label()).clicked() {
             if let Some(filename) = FileDialog::new().add_filter("obj", &["obj"]).pick_file() {
-                let loading = Graph::load(filename.to_str().unwrap_or(""));
+                let loading =
+                    Object::load(filename.to_str().unwrap_or(""), self.obj_color.to_array());
                 if loading.is_ok() {
                     self.start_obj = Some(loading.unwrap());
+                    self.is_start_obj_viewed = true;
+                    self.draw_object();
+                } else {
+                    println!("{:?}", loading.err());
                 }
             }
-            self.is_start_obj_loaded = self.start_obj.is_some();
-            println!("{:?}", self.start_obj.as_mut().unwrap().vertexes[0].x);
         }
         if ui.button(self.button_load_result_label()).clicked() {
             if let Some(filename) = FileDialog::new().add_filter("obj", &["obj"]).pick_file() {
-                let loading = Graph::load(filename.to_str().unwrap_or(""));
+                let loading =
+                    Object::load(filename.to_str().unwrap_or(""), self.obj_color.to_array());
                 if loading.is_ok() {
                     self.result_obj = Some(loading.unwrap());
+                    self.is_start_obj_viewed = false;
+                    self.draw_object();
+                } else {
+                    println!("{:?}", loading.err());
                 }
             }
-            self.is_result_obj_loaded = self.result_obj.is_some();
         }
         if ui.button("Swap objects").clicked() {
             swap(&mut self.start_obj, &mut self.result_obj);
-            swap(
-                &mut self.is_start_obj_loaded,
-                &mut self.is_result_obj_loaded,
-            );
+            self.is_start_obj_viewed ^= true;
+        }
+    }
+
+    fn draw_object(&mut self) {
+        self.canvas.clear();
+        let object = match self.is_start_obj_viewed {
+            true => &self.start_obj,
+            false => &self.result_obj,
+        };
+        if let Some(object) = object {
+            self.canvas.draw_object(object);
         }
     }
 
@@ -117,14 +172,8 @@ impl Painting {
             Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
             Color32::WHITE,
         );
+        // painter.add(Shape::LineSegment { points: (), stroke: () })
         painter.add(Shape::mesh(mesh));
-
-        // let to_screen = emath::RectTransform::from_to(
-        //     Rect::from_min_size(Pos2::ZERO, response.rect.size()),
-        //     response.rect,
-        // );
-
-        // painter.add(PathShape::line(self.canvas.frame(), self.aux_stroke));
 
         response
     }

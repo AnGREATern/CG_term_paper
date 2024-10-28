@@ -1,20 +1,25 @@
 use super::vertex::Vertex;
 use std::{
     fs::File,
-    io::{self, prelude::*, BufReader, ErrorKind},
+    io::{self, BufRead, BufReader},
 };
 
-pub struct Graph {
+pub struct Object {
     pub vertexes: Vec<Vertex>,
     faces: Vec<Vec<usize>>,
+    color: [u8; 4],
 }
 
-impl Graph {
-    pub fn new(vertexes: Vec<Vertex>, faces: Vec<Vec<usize>>) -> Self {
-        Self { vertexes, faces }
+impl Object {
+    pub fn new(vertexes: Vec<Vertex>, faces: Vec<Vec<usize>>, color: [u8; 4]) -> Self {
+        Self {
+            vertexes,
+            faces,
+            color,
+        }
     }
 
-    pub fn load(filename: &str) -> io::Result<Self> {
+    pub fn load(filename: &str, color: [u8; 4]) -> io::Result<Self> {
         let file = File::open(filename)?;
         let reader = BufReader::new(file);
 
@@ -25,9 +30,6 @@ impl Graph {
             let vals = line.split_whitespace().collect::<Vec<_>>();
             if vals.len() == 0 {
                 continue;
-            }
-            if vals.len() != 4 {
-                return Err(ErrorKind::InvalidData.into());
             }
             match vals[0] {
                 "v" => vertexes.push(Vertex::new(
@@ -44,13 +46,23 @@ impl Graph {
             }
         }
 
-        Ok(Self::new(vertexes, faces))
+        Ok(Self::new(vertexes, faces, color))
     }
 
-    // pub fn add_edge(&mut self, from: usize, to: usize) {
-    //     self.edges[from].push(to);
-    //     if !self.is_directed {
-    //         self.edges[to].push(from);
-    //     }
-    // }
+    pub fn color(&self) -> [u8; 4] {
+        self.color
+    }
+
+    pub fn nfaces(&self) -> usize {
+        self.faces.len()
+    }
+
+    pub fn face(&self, index: usize) -> Vec<Vertex> {
+        let mut res = vec![];
+        for nv in self.faces[index].iter() {
+            res.push(self.vertexes[*nv]);
+        }
+
+        res
+    }
 }
