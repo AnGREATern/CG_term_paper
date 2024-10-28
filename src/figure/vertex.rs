@@ -1,3 +1,5 @@
+use crate::consts::DEFAULT_SCALE;
+
 use std::ops::{Add, BitXor, Mul, Sub};
 
 #[derive(Clone, Copy)]
@@ -14,8 +16,8 @@ impl Vertex {
 
     pub fn world_to_screen(&self, height: u32, width: u32) -> Vertex {
         let mut res = Self {
-            x: ((self.x + 1.) * (width as f64) / 4.),
-            y: ((self.y + 1.) * (height as f64) / 4.),
+            x: ((self.x + 1.) * (width as f64) / DEFAULT_SCALE),
+            y: ((self.y + 1.) * (height as f64) / DEFAULT_SCALE),
             z: self.z,
         };
         res.round();

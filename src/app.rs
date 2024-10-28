@@ -1,15 +1,17 @@
 use std::mem::swap;
 
 use crate::egui::{
-    widgets::color_picker, CentralPanel, Color32, ColorImage, Context, Mesh, Pos2, Rect, Response,
-    Sense, Shape, Ui,
+    widgets::color_picker, CentralPanel, Color32, ColorImage, Context, Event, Mesh, Pos2, Rect,
+    Response, Sense, Shape, Ui,
 };
 use crate::figure::object::Object;
+use crate::figure::vertex::Vertex;
 use eframe::egui::color_picker::Alpha;
+use eframe::egui::{PointerButton, Vec2};
 use rfd::FileDialog;
 
 use crate::canvas::Canvas;
-use crate::WINDOW_SIZE;
+use crate::{DEFAULT_SCALE, WINDOW_SIZE};
 
 pub struct Painting {
     is_start_obj_viewed: bool,
@@ -17,6 +19,8 @@ pub struct Painting {
     result_obj: Option<Object>,
     canvas: Canvas,
     obj_color: Color32,
+    start_pos_move: Pos2,
+    start_pos_rotate: Pos2,
 }
 
 impl Default for Painting {
@@ -24,14 +28,18 @@ impl Default for Painting {
         let is_start_obj_viewed = true;
         let start_obj = None;
         let result_obj = None;
-        let canvas = Canvas::new(WINDOW_SIZE.0, WINDOW_SIZE.1, 255);
+        let canvas = Canvas::new(WINDOW_SIZE.0, WINDOW_SIZE.1, 0);
         let obj_color = Color32::WHITE;
+        let start_pos_move = Pos2::default();
+        let start_pos_rotate = Pos2::default();
         Self {
             is_start_obj_viewed,
             start_obj,
             result_obj,
             canvas,
             obj_color,
+            start_pos_move,
+            start_pos_rotate,
         }
     }
 }
@@ -41,6 +49,35 @@ impl eframe::App for Painting {
         CentralPanel::default().show(ctx, |ui| {
             self.ui_menus(ui);
             self.ui_canvas(ui);
+            ui.input(|i| {
+                for event in &i.raw.events {
+                    if let Event::PointerButton {
+                        pos,
+                        button,
+                        pressed,
+                        ..
+                    } = event
+                    {
+                        match button {
+                            PointerButton::Primary => {
+                                if *pressed {
+                                    self.start_pos_move = *pos;
+                                } else {
+                                    self.move_object(*pos - self.start_pos_move);
+                                }
+                            }
+                            PointerButton::Secondary => {
+                                if *pressed {
+                                    self.start_pos_rotate = *pos;
+                                } else {
+                                    self.rotate_object(*pos - self.start_pos_move);
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            })
         });
     }
 }
@@ -82,11 +119,44 @@ impl Painting {
         ui.horizontal(|ui| {
             ui.menu_button("Load objects", |ui| self.load_obj_nested_menus(ui));
             ui.menu_button("View", |ui| self.view_nested_menus(ui));
-            ui.menu_button("Pick color", |ui| self.pick_color_nested_menus(ui));
+            ui.menu_button("Pick color", |ui| self.pick_color(ui));
+            // ui.menu_button("Move object", |ui| self.move_obj(ui));
         });
     }
 
-    fn pick_color_nested_menus(&mut self, ui: &mut Ui) {
+    fn move_object(&mut self, delta: Vec2) {
+        let delta = Vertex::new(
+            delta.x as f64 / self.canvas.width() as f64 * DEFAULT_SCALE,
+            delta.y as f64 / self.canvas.height() as f64 * DEFAULT_SCALE,
+            0.
+        );
+        let object = match self.is_start_obj_viewed {
+            true => &mut self.start_obj,
+            false => &mut self.result_obj,
+        };
+        if let Some(object) = object {
+            object.mov(delta);
+        }
+        self.draw_object();
+    }
+
+    fn rotate_object(&mut self, delta: Vec2) {
+        let delta = Vertex::new(
+            delta.y as f64 / self.canvas.height() as f64,
+            delta.x as f64 / self.canvas.width() as f64,
+            0.
+        );
+        let object = match self.is_start_obj_viewed {
+            true => &mut self.start_obj,
+            false => &mut self.result_obj,
+        };
+        if let Some(object) = object {
+            object.rotate(delta);
+        }
+        self.draw_object();
+    }
+
+    fn pick_color(&mut self, ui: &mut Ui) {
         color_picker::color_picker_color32(ui, &mut self.obj_color, Alpha::Opaque);
     }
 

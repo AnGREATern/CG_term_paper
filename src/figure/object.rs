@@ -65,4 +65,30 @@ impl Object {
 
         res
     }
+
+    pub fn mov(&mut self, delta: Vertex) {
+        for vertex in self.vertexes.iter_mut() {
+            *vertex = *vertex + delta;
+        }
+    }
+
+    pub fn rotate(&mut self, angles: Vertex) {
+        let (sin_x, cos_x) = angles.x.sin_cos();
+        let (sin_y, cos_y) = angles.y.sin_cos();
+        let (sin_z, cos_z) = angles.z.sin_cos();
+        for vertex in self.vertexes.iter_mut() {
+            let y1 = vertex.y * cos_x - vertex.z * sin_x;
+            let z1 = vertex.y * sin_x + vertex.z * cos_x;
+
+            let x2 = vertex.x * cos_y + z1 * sin_y;
+            let z2 = -vertex.x * sin_y + z1 * cos_y;
+
+            let x3 = x2 * cos_z - y1 * sin_z;
+            let y3 = x2 * sin_z + y1 * cos_z;
+
+            vertex.x = x3;
+            vertex.y = y3;
+            vertex.z = z2;
+        }
+    }
 }

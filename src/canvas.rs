@@ -30,6 +30,14 @@ impl Canvas {
         &self.frame.as_slice()
     }
 
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height
+    }
+
     pub fn clear(&mut self) {
         self.frame = vec![self.background_color; (4 * self.height * self.width) as usize];
         self.zbuffer = vec![MIN; (self.height * self.width) as usize];
@@ -101,7 +109,7 @@ impl Canvas {
                 let mut p = a + (b - a) * phi;
                 p.round();
                 let idx = (p.x as u32 + p.y as u32 * self.width) as usize;
-                if self.zbuffer[idx] < p.z as i32 {
+                if idx < self.zbuffer.len() && self.zbuffer[idx] < p.z as i32 {
                     self.zbuffer[idx] = p.z as i32;
                     self.set_pixel(p.x.round() as u32, p.y.round() as u32, color);
                 }
