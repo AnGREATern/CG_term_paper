@@ -19,8 +19,9 @@ pub struct Painting {
     result_obj: Option<Object>,
     canvas: Canvas,
     obj_color: Color32,
-    start_pos_move: Pos2,
-    start_pos_rotate: Pos2,
+    is_left_mouse_button_pressing: bool,
+    is_right_mouse_button_pressing: bool,
+    light_direction: Vertex,
 }
 
 impl Default for Painting {
@@ -30,16 +31,18 @@ impl Default for Painting {
         let result_obj = None;
         let canvas = Canvas::new(WINDOW_SIZE.0, WINDOW_SIZE.1, 0);
         let obj_color = Color32::WHITE;
-        let start_pos_move = Pos2::default();
-        let start_pos_rotate = Pos2::default();
+        let is_left_mouse_button_pressing = false;
+        let is_right_mouse_button_pressing = false;
+        let light_direction = Vertex::new(0., 0., -1.);
         Self {
             is_start_obj_viewed,
             start_obj,
             result_obj,
             canvas,
             obj_color,
-            start_pos_move,
-            start_pos_rotate,
+            is_left_mouse_button_pressing,
+            is_right_mouse_button_pressing,
+            light_direction,
         }
     }
 }
@@ -51,29 +54,23 @@ impl eframe::App for Painting {
             self.ui_canvas(ui);
             ui.input(|i| {
                 for event in &i.raw.events {
+                    if let Event::MouseMoved( pos ) = event {
+                        if self.is_left_mouse_button_pressing {
+                            self.move_object(pos);
+                        }
+                        if self.is_right_mouse_button_pressing {
+                            self.rotate_object(pos);
+                        }
+                    }
                     if let Event::PointerButton {
-                        pos,
                         button,
                         pressed,
                         ..
-                    } = event
-                    {
+                    } = event {
                         match button {
-                            PointerButton::Primary => {
-                                if *pressed {
-                                    self.start_pos_move = *pos;
-                                } else {
-                                    self.move_object(*pos - self.start_pos_move);
-                                }
-                            }
-                            PointerButton::Secondary => {
-                                if *pressed {
-                                    self.start_pos_rotate = *pos;
-                                } else {
-                                    self.rotate_object(*pos - self.start_pos_move);
-                                }
-                            }
-                            _ => {}
+                            PointerButton::Primary => self.is_left_mouse_button_pressing = *pressed,
+                            PointerButton::Secondary => self.is_right_mouse_button_pressing = *pressed,
+                            _ => {},
                         }
                     }
                 }
@@ -120,11 +117,56 @@ impl Painting {
             ui.menu_button("Load objects", |ui| self.load_obj_nested_menus(ui));
             ui.menu_button("View", |ui| self.view_nested_menus(ui));
             ui.menu_button("Pick color", |ui| self.pick_color(ui));
+            ui.menu_button("Move light source", |ui| self.move_light_src_nested_menus(ui));
             // ui.menu_button("Move object", |ui| self.move_obj(ui));
+            ui.menu_button("Run morphing", |ui| self.morph(ui));
         });
     }
 
-    fn move_object(&mut self, delta: Vec2) {
+    fn morph(&mut self, ui: &mut Ui) {
+        // TODO
+    }
+
+    fn move_light_src_nested_menus(&mut self, ui: &mut Ui) {
+        if ui.button("Move right").clicked() {
+            let delta = Vertex::new(
+                -0.1,
+                0.,
+                0.
+            );
+            self.light_direction.mov(delta);
+            self.draw_object();
+        }
+        if ui.button("Move left").clicked() {
+            let delta = Vertex::new(
+                0.1,
+                0.,
+                0.
+            );
+            self.light_direction.mov(delta);
+            self.draw_object();
+        }
+        if ui.button("Move up").clicked() {
+            let delta = Vertex::new(
+                0.,
+                0.1,
+                0.
+            );
+            self.light_direction.mov(delta);
+            self.draw_object();
+        }
+        if ui.button("Move down").clicked() {
+            let delta = Vertex::new(
+                0.0,
+                -0.1,
+                0.
+            );
+            self.light_direction.mov(delta);
+            self.draw_object();
+        }
+    }
+
+    fn move_object(&mut self, delta: &Vec2) {
         let delta = Vertex::new(
             delta.x as f64 / self.canvas.width() as f64 * DEFAULT_SCALE,
             delta.y as f64 / self.canvas.height() as f64 * DEFAULT_SCALE,
@@ -136,13 +178,13 @@ impl Painting {
         };
         if let Some(object) = object {
             object.mov(delta);
+            self.draw_object();
         }
-        self.draw_object();
     }
 
-    fn rotate_object(&mut self, delta: Vec2) {
+    fn rotate_object(&mut self, delta: &Vec2) {
         let delta = Vertex::new(
-            delta.y as f64 / self.canvas.height() as f64,
+            -delta.y as f64 / self.canvas.height() as f64,
             delta.x as f64 / self.canvas.width() as f64,
             0.
         );
@@ -152,8 +194,8 @@ impl Painting {
         };
         if let Some(object) = object {
             object.rotate(delta);
+            self.draw_object();
         }
-        self.draw_object();
     }
 
     fn pick_color(&mut self, ui: &mut Ui) {
@@ -219,7 +261,7 @@ impl Painting {
             false => &self.result_obj,
         };
         if let Some(object) = object {
-            self.canvas.draw_object(object);
+            self.canvas.draw_object(object, self.light_direction);
         }
     }
 
