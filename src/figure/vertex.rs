@@ -1,3 +1,5 @@
+use crate::consts::DEFAULT_SCALE;
+
 use std::ops::{Add, BitXor, Mul, Sub};
 
 #[derive(Clone, Copy)]
@@ -14,8 +16,8 @@ impl Vertex {
 
     pub fn world_to_screen(&self, height: u32, width: u32) -> Vertex {
         let mut res = Self {
-            x: ((self.x + 1.) * (width as f64) / 4.),
-            y: ((self.y + 1.) * (height as f64) / 4.),
+            x: ((self.x + 1.) * (width as f64) / DEFAULT_SCALE),
+            y: ((self.y + 1.) * (height as f64) / DEFAULT_SCALE),
             z: self.z,
         };
         res.round();
@@ -38,6 +40,29 @@ impl Vertex {
         self.x /= len;
         self.y /= len;
         self.z /= len;
+    }
+
+    pub fn mov(&mut self, delta: Vertex) {
+        *self = *self + delta;
+    }
+
+    pub fn rotate(&mut self, angles: Vertex) {
+        let (sin_x, cos_x) = angles.x.sin_cos();
+        let (sin_y, cos_y) = angles.y.sin_cos();
+        let (sin_z, cos_z) = angles.z.sin_cos();
+        
+        let y1 = self.y * cos_x - self.z * sin_x;
+        let z1 = self.y * sin_x + self.z * cos_x;
+
+        let x2 = self.x * cos_y + z1 * sin_y;
+        let z2 = -self.x * sin_y + z1 * cos_y;
+
+        let x3 = x2 * cos_z - y1 * sin_z;
+        let y3 = x2 * sin_z + y1 * cos_z;
+
+        self.x = x3;
+        self.y = y3;
+        self.z = z2;
     }
 }
 

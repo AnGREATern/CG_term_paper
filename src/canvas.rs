@@ -8,21 +8,18 @@ pub struct Canvas {
     height: u32,
     background_color: u8,
     zbuffer: Vec<i32>,
-    light_direction: Vertex,
 }
 
 impl Canvas {
     pub fn new(width: u32, height: u32, background_color: u8) -> Self {
         let frame = vec![background_color; (4 * height * width) as usize];
         let zbuffer = vec![MIN; (height * width) as usize];
-        let light_direction = Vertex::new(0., 0., -1.);
         Self {
             frame,
             width,
             height,
             background_color,
             zbuffer,
-            light_direction,
         }
     }
 
@@ -30,18 +27,26 @@ impl Canvas {
         &self.frame.as_slice()
     }
 
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height
+    }
+
     pub fn clear(&mut self) {
         self.frame = vec![self.background_color; (4 * self.height * self.width) as usize];
         self.zbuffer = vec![MIN; (self.height * self.width) as usize];
     }
 
-    pub fn draw_object(&mut self, object: &Object) {
+    pub fn draw_object(&mut self, object: &Object, light_direction: Vertex) {
         let color = object.color();
         for face_ind in 0..object.nfaces() {
             let world_coords = object.face(face_ind);
             let mut n = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
             n.normalize();
-            let intensity = self.light_direction * n;
+            let intensity = light_direction * n;
             if intensity > 0. {
                 let screen_coords = vec![
                     world_coords[0].world_to_screen(self.height, self.width),
@@ -101,7 +106,7 @@ impl Canvas {
                 let mut p = a + (b - a) * phi;
                 p.round();
                 let idx = (p.x as u32 + p.y as u32 * self.width) as usize;
-                if self.zbuffer[idx] < p.z as i32 {
+                if idx < self.zbuffer.len() && self.zbuffer[idx] < p.z as i32 {
                     self.zbuffer[idx] = p.z as i32;
                     self.set_pixel(p.x.round() as u32, p.y.round() as u32, color);
                 }
