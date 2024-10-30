@@ -11,7 +11,7 @@ use eframe::egui::{PointerButton, Vec2};
 use rfd::FileDialog;
 
 use crate::canvas::Canvas;
-use crate::{DEFAULT_SCALE, WINDOW_SIZE};
+use crate::{BACKGROUND_COLOR, DEFAULT_SCALE, WINDOW_SIZE};
 
 pub struct Painting {
     is_start_obj_viewed: bool,
@@ -29,7 +29,7 @@ impl Default for Painting {
         let is_start_obj_viewed = true;
         let start_obj = None;
         let result_obj = None;
-        let canvas = Canvas::new(WINDOW_SIZE.0, WINDOW_SIZE.1, 0);
+        let canvas = Canvas::new(WINDOW_SIZE.0, WINDOW_SIZE.1, &BACKGROUND_COLOR);
         let obj_color = Color32::WHITE;
         let is_movement_access = false;
         let is_rotating_access = false;
@@ -54,7 +54,7 @@ impl eframe::App for Painting {
             self.ui_canvas(ui);
             ui.input(|i| {
                 for event in &i.raw.events {
-                    if let Event::MouseMoved( pos ) = event {
+                    if let Event::MouseMoved(pos) = event {
                         if self.is_movement_access {
                             self.move_object(pos);
                         }
@@ -67,11 +67,16 @@ impl eframe::App for Painting {
                         pressed,
                         modifiers,
                         ..
-                    } = event {
+                    } = event
+                    {
                         match button {
-                            PointerButton::Primary => self.is_movement_access = *pressed && modifiers.ctrl,
-                            PointerButton::Secondary => self.is_rotating_access = *pressed && modifiers.ctrl,
-                            _ => {},
+                            PointerButton::Primary => {
+                                self.is_movement_access = *pressed && modifiers.ctrl
+                            }
+                            PointerButton::Secondary => {
+                                self.is_rotating_access = *pressed && modifiers.ctrl
+                            }
+                            _ => {}
                         }
                     }
                 }
@@ -118,7 +123,9 @@ impl Painting {
             ui.menu_button("Load objects", |ui| self.load_obj_nested_menus(ui));
             ui.menu_button("View", |ui| self.view_nested_menus(ui));
             ui.menu_button("Pick color", |ui| self.pick_color(ui));
-            ui.menu_button("Move light source", |ui| self.move_light_src_nested_menus(ui));
+            ui.menu_button("Move light source", |ui| {
+                self.move_light_src_nested_menus(ui)
+            });
             // ui.menu_button("Move object", |ui| self.move_obj(ui));
             ui.menu_button("Run morphing", |ui| self.morph(ui));
         });
@@ -130,38 +137,22 @@ impl Painting {
 
     fn move_light_src_nested_menus(&mut self, ui: &mut Ui) {
         if ui.button("Move right").clicked() {
-            let delta = Vertex::new(
-                -0.1,
-                0.,
-                0.
-            );
+            let delta = Vertex::new(-0.1, 0., 0.);
             self.light_direction.mov(delta);
             self.draw_object();
         }
         if ui.button("Move left").clicked() {
-            let delta = Vertex::new(
-                0.1,
-                0.,
-                0.
-            );
+            let delta = Vertex::new(0.1, 0., 0.);
             self.light_direction.mov(delta);
             self.draw_object();
         }
         if ui.button("Move up").clicked() {
-            let delta = Vertex::new(
-                0.,
-                0.1,
-                0.
-            );
+            let delta = Vertex::new(0., 0.1, 0.);
             self.light_direction.mov(delta);
             self.draw_object();
         }
         if ui.button("Move down").clicked() {
-            let delta = Vertex::new(
-                0.0,
-                -0.1,
-                0.
-            );
+            let delta = Vertex::new(0.0, -0.1, 0.);
             self.light_direction.mov(delta);
             self.draw_object();
         }
@@ -171,7 +162,7 @@ impl Painting {
         let delta = Vertex::new(
             delta.x as f64 / self.canvas.width() as f64 * DEFAULT_SCALE,
             delta.y as f64 / self.canvas.height() as f64 * DEFAULT_SCALE,
-            0.
+            0.,
         );
         let object = match self.is_start_obj_viewed {
             true => &mut self.start_obj,
@@ -187,7 +178,7 @@ impl Painting {
         let delta = Vertex::new(
             -delta.y as f64 / self.canvas.height() as f64,
             delta.x as f64 / self.canvas.width() as f64,
-            0.
+            0.,
         );
         let object = match self.is_start_obj_viewed {
             true => &mut self.start_obj,

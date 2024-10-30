@@ -1,4 +1,4 @@
-use std::{i32::MIN, mem::swap};
+use std::{f64::MIN, mem::swap};
 
 use crate::figure::{object::Object, vertex::Vertex};
 
@@ -6,21 +6,25 @@ pub struct Canvas {
     frame: Vec<u8>,
     width: u32,
     height: u32,
-    background_color: u8,
-    zbuffer: Vec<i32>,
+    color: [u8; 4],
+    zbuffer: Vec<f64>,
 }
 
 impl Canvas {
-    pub fn new(width: u32, height: u32, background_color: u8) -> Self {
-        let frame = vec![background_color; (4 * height * width) as usize];
+    pub fn new(width: u32, height: u32, color: &[u8; 4]) -> Self {
+        let frame = vec![0; (4 * width * height) as usize];
         let zbuffer = vec![MIN; (height * width) as usize];
-        Self {
+        let color = color.clone();
+        let mut res = Self {
             frame,
             width,
             height,
-            background_color,
+            color,
             zbuffer,
-        }
+        };
+        res.fill();
+
+        res
     }
 
     pub fn frame(&self) -> &[u8] {
@@ -36,35 +40,44 @@ impl Canvas {
     }
 
     pub fn clear(&mut self) {
-        self.frame = vec![self.background_color; (4 * self.height * self.width) as usize];
+        self.fill();
         self.zbuffer = vec![MIN; (self.height * self.width) as usize];
     }
 
-    pub fn draw_object(&mut self, object: &Object, light_direction: Vertex) {
+    pub fn draw_object(&mut self, object: &Object, mut light_direction: Vertex) {
+        light_direction.normalize();
         let color = object.color();
         for face_ind in 0..object.nfaces() {
             let world_coords = object.face(face_ind);
             let mut n = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
             n.normalize();
             let intensity = light_direction * n;
+            let screen_coords = vec![
+                world_coords[0].world_to_screen(self.height, self.width),
+                world_coords[1].world_to_screen(self.height, self.width),
+                world_coords[2].world_to_screen(self.height, self.width),
+            ];
+            let mut cur_color = color.clone();
             if intensity > 0. {
-                let screen_coords = vec![
-                    world_coords[0].world_to_screen(self.height, self.width),
-                    world_coords[1].world_to_screen(self.height, self.width),
-                    world_coords[2].world_to_screen(self.height, self.width),
-                ];
-                let mut cur_color = color.clone();
                 cur_color[0] = (cur_color[0] as f64 * intensity) as u8;
                 cur_color[1] = (cur_color[1] as f64 * intensity) as u8;
                 cur_color[2] = (cur_color[2] as f64 * intensity) as u8;
-                self.draw_triangle(screen_coords, &cur_color);
+            } else {
+                cur_color = self.color.clone();
             }
+
+            self.draw_triangle(screen_coords, &cur_color);
         }
-        // Возвращать Result желательно
     }
 }
 
 impl Canvas {
+    fn fill(&mut self) {
+        for chunk in self.frame.chunks_exact_mut(self.color.len()) {
+            chunk.copy_from_slice(&self.color);
+        }
+    }
+
     fn draw_triangle(&mut self, mut coords: Vec<Vertex>, color: &[u8; 4]) {
         if coords[0].y == coords[1].y && coords[1].y == coords[2].y {
             return;
@@ -106,8 +119,8 @@ impl Canvas {
                 let mut p = a + (b - a) * phi;
                 p.round();
                 let idx = (p.x as u32 + p.y as u32 * self.width) as usize;
-                if idx < self.zbuffer.len() && self.zbuffer[idx] < p.z as i32 {
-                    self.zbuffer[idx] = p.z as i32;
+                if idx < self.zbuffer.len() && self.zbuffer[idx] < p.z {
+                    self.zbuffer[idx] = p.z;
                     self.set_pixel(p.x.round() as u32, p.y.round() as u32, color);
                 }
             }
