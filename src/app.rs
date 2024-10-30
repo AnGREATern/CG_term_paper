@@ -19,8 +19,8 @@ pub struct Painting {
     result_obj: Option<Object>,
     canvas: Canvas,
     obj_color: Color32,
-    is_left_mouse_button_pressing: bool,
-    is_right_mouse_button_pressing: bool,
+    is_movement_access: bool,
+    is_rotating_access: bool,
     light_direction: Vertex,
 }
 
@@ -31,8 +31,8 @@ impl Default for Painting {
         let result_obj = None;
         let canvas = Canvas::new(WINDOW_SIZE.0, WINDOW_SIZE.1, 0);
         let obj_color = Color32::WHITE;
-        let is_left_mouse_button_pressing = false;
-        let is_right_mouse_button_pressing = false;
+        let is_movement_access = false;
+        let is_rotating_access = false;
         let light_direction = Vertex::new(0., 0., -1.);
         Self {
             is_start_obj_viewed,
@@ -40,8 +40,8 @@ impl Default for Painting {
             result_obj,
             canvas,
             obj_color,
-            is_left_mouse_button_pressing,
-            is_right_mouse_button_pressing,
+            is_movement_access,
+            is_rotating_access,
             light_direction,
         }
     }
@@ -55,21 +55,22 @@ impl eframe::App for Painting {
             ui.input(|i| {
                 for event in &i.raw.events {
                     if let Event::MouseMoved( pos ) = event {
-                        if self.is_left_mouse_button_pressing {
+                        if self.is_movement_access {
                             self.move_object(pos);
                         }
-                        if self.is_right_mouse_button_pressing {
+                        if self.is_rotating_access {
                             self.rotate_object(pos);
                         }
                     }
                     if let Event::PointerButton {
                         button,
                         pressed,
+                        modifiers,
                         ..
                     } = event {
                         match button {
-                            PointerButton::Primary => self.is_left_mouse_button_pressing = *pressed,
-                            PointerButton::Secondary => self.is_right_mouse_button_pressing = *pressed,
+                            PointerButton::Primary => self.is_movement_access = *pressed && modifiers.ctrl,
+                            PointerButton::Secondary => self.is_rotating_access = *pressed && modifiers.ctrl,
                             _ => {},
                         }
                     }
