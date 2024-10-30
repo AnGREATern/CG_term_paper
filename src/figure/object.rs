@@ -5,7 +5,7 @@ use std::{
 };
 
 pub struct Object {
-    pub vertexes: Vec<Vertex>,
+    vertexes: Vec<Vertex>,
     faces: Vec<Vec<usize>>,
     color: [u8; 4],
 }
@@ -55,6 +55,18 @@ impl Object {
 
     pub fn nfaces(&self) -> usize {
         self.faces.len()
+    }
+
+    pub fn center(&self) -> Vertex {
+        let mut center = Vertex::default();
+        for vertex in self.vertexes.iter() {
+            center += *vertex;
+        }
+        if self.vertexes.len() > 0 {
+            center /= self.vertexes.len();
+        }
+
+        center
     }
 
     pub fn face(&self, index: usize) -> Vec<Vertex> {

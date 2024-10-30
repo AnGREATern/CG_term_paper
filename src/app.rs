@@ -5,13 +5,14 @@ use crate::egui::{
     Response, Sense, Shape, Ui,
 };
 use crate::figure::object::Object;
+use crate::figure::projection::Projection;
 use crate::figure::vertex::Vertex;
 use eframe::egui::color_picker::Alpha;
 use eframe::egui::{PointerButton, Vec2};
 use rfd::FileDialog;
 
 use crate::canvas::Canvas;
-use crate::{BACKGROUND_COLOR, DEFAULT_SCALE, WINDOW_SIZE};
+use crate::{BACKGROUND_COLOR, DEFAULT_SCALE, SPHERE_RADIUS, WINDOW_SIZE};
 
 pub struct Painting {
     is_start_obj_viewed: bool,
@@ -132,7 +133,13 @@ impl Painting {
     }
 
     fn morph(&mut self, ui: &mut Ui) {
-        // TODO
+        if self.start_obj.is_none() || self.result_obj.is_none() {
+            return;
+        }
+
+        let start_proj = Projection::new(self.start_obj.as_ref().unwrap(), SPHERE_RADIUS);
+        let result_proj = Projection::new(self.result_obj.as_ref().unwrap(), SPHERE_RADIUS);
+        todo!();
     }
 
     fn move_light_src_nested_menus(&mut self, ui: &mut Ui) {

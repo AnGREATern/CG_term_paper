@@ -1,8 +1,8 @@
 use crate::consts::DEFAULT_SCALE;
 
-use std::ops::{Add, BitXor, Mul, Sub};
+use std::ops::{Add, AddAssign, BitXor, DivAssign, Mul, Sub};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct Vertex {
     pub x: f64,
     pub y: f64,
@@ -23,6 +23,11 @@ impl Vertex {
         res.round();
 
         res
+    }
+
+    pub fn project_to_sphere(self, center: Vertex, radius: f64) -> Vertex {
+        let dir = self - center;
+        dir * (radius / dir.len())
     }
 
     pub fn round(&mut self) {
@@ -74,6 +79,22 @@ impl Add for Vertex {
             y: self.y + other.y,
             z: self.z + other.z,
         }
+    }
+}
+
+impl AddAssign for Vertex {
+    fn add_assign(&mut self, other: Self) {
+        self.x += other.x;
+        self.y += other.y;
+        self.z += other.z;
+    }
+}
+
+impl DivAssign<usize> for Vertex {
+    fn div_assign(&mut self, other: usize) {
+        self.x /= other as f64;
+        self.y /= other as f64;
+        self.z /= other as f64;
     }
 }
 
