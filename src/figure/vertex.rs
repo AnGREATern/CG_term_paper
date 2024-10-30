@@ -28,7 +28,6 @@ impl Vertex {
     pub fn round(&mut self) {
         self.x = self.x.round();
         self.y = self.y.round();
-        self.z = self.z.round();
     }
 
     pub fn len(&self) -> f64 {
@@ -50,7 +49,7 @@ impl Vertex {
         let (sin_x, cos_x) = angles.x.sin_cos();
         let (sin_y, cos_y) = angles.y.sin_cos();
         let (sin_z, cos_z) = angles.z.sin_cos();
-        
+
         let y1 = self.y * cos_x - self.z * sin_x;
         let z1 = self.y * sin_x + self.z * cos_x;
 
