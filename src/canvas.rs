@@ -1,20 +1,20 @@
 use std::{f64::MIN, mem::swap};
 
+use crate::color::Color;
 use crate::figure::{object::Object, vertex::Vertex};
 
 pub struct Canvas {
     frame: Vec<u8>,
     width: u32,
     height: u32,
-    color: [u8; 4],
+    color: Color,
     zbuffer: Vec<f64>,
 }
 
 impl Canvas {
-    pub fn new(width: u32, height: u32, color: &[u8; 4]) -> Self {
+    pub fn new(width: u32, height: u32, color: Color) -> Self {
         let frame = vec![0; color.len() * (width * height) as usize];
         let zbuffer = vec![MIN; (height * width) as usize];
-        let color = color.clone();
         let mut res = Self {
             frame,
             width,
@@ -59,14 +59,16 @@ impl Canvas {
             ];
             let mut cur_color = color.clone();
             if intensity > 0. {
-                cur_color[0] = (cur_color[0] as f64 * intensity) as u8;
-                cur_color[1] = (cur_color[1] as f64 * intensity) as u8;
-                cur_color[2] = (cur_color[2] as f64 * intensity) as u8;
+                cur_color.set_rgb(
+                    (cur_color.r() as f64 * intensity) as u8,
+                    (cur_color.g() as f64 * intensity) as u8,
+                    (cur_color.b() as f64 * intensity) as u8,
+                );
             } else {
                 cur_color = self.color.clone();
             }
 
-            self.draw_triangle(screen_coords, &cur_color);
+            self.draw_triangle(screen_coords, cur_color);
         }
     }
 }
@@ -74,11 +76,11 @@ impl Canvas {
 impl Canvas {
     fn fill(&mut self) {
         for chunk in self.frame.chunks_exact_mut(self.color.len()) {
-            chunk.copy_from_slice(&self.color);
+            chunk.copy_from_slice(&self.color.to_array());
         }
     }
 
-    fn draw_triangle(&mut self, mut coords: Vec<Vertex>, color: &[u8; 4]) {
+    fn draw_triangle(&mut self, mut coords: Vec<Vertex>, color: Color) {
         if coords[0].y == coords[1].y && coords[1].y == coords[2].y {
             return;
         }
@@ -121,14 +123,14 @@ impl Canvas {
                 let idx = (p.x as u32 + p.y as u32 * self.width) as usize;
                 if idx < self.zbuffer.len() && self.zbuffer[idx] < p.z {
                     self.zbuffer[idx] = p.z;
-                    self.set_pixel(p.x.round() as u32, p.y.round() as u32, color);
+                    self.set_pixel(p.x.round() as u32, p.y.round() as u32, color.clone());
                 }
             }
         }
     }
 
-    fn set_pixel(&mut self, x: u32, y: u32, color: &[u8; 4]) {
+    fn set_pixel(&mut self, x: u32, y: u32, color: Color) {
         let pixel = color.len() * (x + y * self.width) as usize;
-        self.frame[pixel..pixel + color.len()].copy_from_slice(color);
+        self.frame[pixel..pixel + color.len()].copy_from_slice(&color.to_array());
     }
 }

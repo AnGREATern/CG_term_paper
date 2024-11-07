@@ -1,5 +1,7 @@
 use std::collections::btree_set::Iter;
 
+use crate::color::Color;
+
 use super::{edge::Edge, edge_set::EdgeSet, object::Object, triangle::Triangle, vertex::Vertex};
 
 pub struct Projection {
@@ -33,6 +35,10 @@ impl Projection {
         }
     }
 
+    pub fn color(&self) -> Color {
+        self.object.color()
+    }
+
     pub fn sphere_vertex(&self, index: usize) -> Vertex {
         self.sphere_vertexes[index]
     }
@@ -63,9 +69,5 @@ impl Projection {
             }
         }
         panic!("No intersect found! {}, {}, {}", v.x, v.y, v.z);
-    }
-
-    pub fn nedges(&self) -> usize {
-        self.edges.len()
     }
 }

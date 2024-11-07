@@ -1,8 +1,7 @@
 use crate::DEFAULT_SCALE;
 
-use std::f64::{MAX, MIN};
-use std::ops::{Add, AddAssign, BitXor, Div, DivAssign, Mul, Neg, Sub, SubAssign};
 use std::cmp::Ordering;
+use std::ops::{Add, AddAssign, BitXor, Div, DivAssign, Mul, Neg, Sub, SubAssign};
 
 #[derive(Clone, Copy, Default, PartialEq, PartialOrd, Debug)]
 pub struct Vertex {
@@ -80,42 +79,42 @@ impl Vertex {
         self.z = z2;
     }
 
-    pub fn bounding_box(verts: &Vec<Self>) -> (Self, Self) {
-        let mut bbox = (Self::new(MAX, MAX, MAX), Self::new(MIN, MIN, MIN));
-        for v in verts {
-            if v.x < bbox.0.x {
-                bbox.0.x = v.x
-            }
-            if v.y < bbox.0.y {
-                bbox.0.y = v.y
-            }
-            if v.z < bbox.0.z {
-                bbox.0.z = v.z
-            }
+    // pub fn bounding_box(verts: &Vec<Self>) -> (Self, Self) {
+    //     let mut bbox = (Self::new(MAX, MAX, MAX), Self::new(MIN, MIN, MIN));
+    //     for v in verts {
+    //         if v.x < bbox.0.x {
+    //             bbox.0.x = v.x
+    //         }
+    //         if v.y < bbox.0.y {
+    //             bbox.0.y = v.y
+    //         }
+    //         if v.z < bbox.0.z {
+    //             bbox.0.z = v.z
+    //         }
 
-            if v.x > bbox.1.x {
-                bbox.1.x = v.x
-            }
-            if v.y > bbox.1.y {
-                bbox.1.y = v.y
-            }
-            if v.z > bbox.1.z {
-                bbox.1.z = v.z
-            }
-        }
+    //         if v.x > bbox.1.x {
+    //             bbox.1.x = v.x
+    //         }
+    //         if v.y > bbox.1.y {
+    //             bbox.1.y = v.y
+    //         }
+    //         if v.z > bbox.1.z {
+    //             bbox.1.z = v.z
+    //         }
+    //     }
 
-        bbox
-    }
+    //     bbox
+    // }
 
-    pub fn max(self) -> f64 {
-        if self.x > self.y && self.x > self.z {
-            self.x
-        } else if self.y > self.z {
-            self.y
-        } else {
-            self.z
-        }
-    }
+    // pub fn max(self) -> f64 {
+    //     if self.x > self.y && self.x > self.z {
+    //         self.x
+    //     } else if self.y > self.z {
+    //         self.y
+    //     } else {
+    //         self.z
+    //     }
+    // }
 }
 
 impl Add for Vertex {

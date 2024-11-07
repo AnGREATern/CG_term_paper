@@ -1,3 +1,5 @@
+use crate::color::Color;
+
 use super::vertex::Vertex;
 use std::{
     fs::File,
@@ -9,11 +11,11 @@ use std::{
 pub struct Object {
     vertexes: Vec<Vertex>,
     faces: Vec<Vec<usize>>,
-    color: [u8; 4],
+    color: Color,
 }
 
 impl Object {
-    pub fn new(vertexes: Vec<Vertex>, faces: Vec<Vec<usize>>, color: [u8; 4]) -> Self {
+    pub fn new(vertexes: Vec<Vertex>, faces: Vec<Vec<usize>>, color: Color) -> Self {
         Self {
             vertexes,
             faces,
@@ -21,7 +23,7 @@ impl Object {
         }
     }
 
-    pub fn load(filename: &str, color: [u8; 4]) -> io::Result<Self> {
+    pub fn load(filename: &str, color: Color) -> io::Result<Self> {
         let file = File::open(filename)?;
         let reader = BufReader::new(file);
 
@@ -51,8 +53,8 @@ impl Object {
         Ok(Self::new(vertexes, faces, color))
     }
 
-    pub fn color(&self) -> [u8; 4] {
-        self.color
+    pub fn color(&self) -> Color {
+        self.color.clone()
     }
 
     pub fn nfaces(&self) -> usize {

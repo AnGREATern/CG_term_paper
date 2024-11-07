@@ -1,8 +1,9 @@
 use std::mem::swap;
 
+use crate::color::Color;
 use crate::egui::{
     widgets::color_picker, CentralPanel, Color32, ColorImage, Context, Event, Mesh, Pos2, Rect,
-    Response, Sense, Shape, Ui,
+    Response, Sense, Shape, Ui
 };
 use crate::figure::merged_object::MergedObject;
 use crate::figure::object::Object;
@@ -13,7 +14,7 @@ use eframe::egui::{PointerButton, Vec2};
 use rfd::FileDialog;
 
 use crate::canvas::Canvas;
-use crate::{BACKGROUND_COLOR, DEFAULT_SCALE, EPS, SPHERE_RADIUS, WINDOW_SIZE};
+use crate::{BACKGROUND_COLOR, DEFAULT_SCALE, EPS, SPHERE_RADIUS, WINDOW_SIZE, RATIO_STEP};
 
 pub struct Painting {
     is_start_obj_viewed: bool,
@@ -35,7 +36,7 @@ impl Default for Painting {
         let result_obj = None;
         let merged_obj = None;
         let ratio = 0.;
-        let canvas = Canvas::new(WINDOW_SIZE.0, WINDOW_SIZE.1, &BACKGROUND_COLOR);
+        let canvas = Canvas::new(WINDOW_SIZE.0, WINDOW_SIZE.1, Color::new(BACKGROUND_COLOR));
         let obj_color = Color32::WHITE;
         let is_movement_access = false;
         let is_rotating_access = false;
@@ -62,6 +63,13 @@ impl eframe::App for Painting {
             self.ui_canvas(ui);
             ui.input(|i| {
                 for event in &i.raw.events {
+                    // if let Event::Key { key, .. } = event {
+                    //     match key {
+                    //         ArrowLeft => self.ratio -= RATIO_STEP,
+                    //         ArrowRight => self.ratio += RATIO_STEP,
+                    //         _ => (),
+                    //     }
+                    // }
                     if let Event::MouseMoved(pos) = event {
                         if self.is_movement_access {
                             self.move_object(pos);
@@ -244,8 +252,10 @@ impl Painting {
 
         if ui.button(self.button_load_start_label()).clicked() {
             if let Some(filename) = FileDialog::new().add_filter("obj", &["obj"]).pick_file() {
-                let loading =
-                    Object::load(filename.to_str().unwrap_or(""), self.obj_color.to_array());
+                let loading = Object::load(
+                    filename.to_str().unwrap_or(""),
+                    Color::new(self.obj_color.to_array()),
+                );
                 if loading.is_ok() {
                     self.start_obj = Some(loading.unwrap());
                     self.is_start_obj_viewed = true;
@@ -257,8 +267,10 @@ impl Painting {
         }
         if ui.button(self.button_load_result_label()).clicked() {
             if let Some(filename) = FileDialog::new().add_filter("obj", &["obj"]).pick_file() {
-                let loading =
-                    Object::load(filename.to_str().unwrap_or(""), self.obj_color.to_array());
+                let loading = Object::load(
+                    filename.to_str().unwrap_or(""),
+                    Color::new(self.obj_color.to_array()),
+                );
                 if loading.is_ok() {
                     self.result_obj = Some(loading.unwrap());
                     self.is_start_obj_viewed = false;
@@ -295,15 +307,16 @@ impl Painting {
                 self.is_start_obj_viewed = true;
                 self.draw_object();
                 self.ratio += 0.01;
-            }
-            else if (self.ratio - 1.).abs() < EPS {
+            } else if (self.ratio - 1.).abs() < EPS {
                 self.is_start_obj_viewed = false;
                 self.draw_object();
                 self.merged_obj = None;
                 self.ratio = 0.;
-            }
-            else {
-                self.canvas.draw_object(&self.merged_obj.as_ref().unwrap().interpolation(self.ratio), self.light_direction);
+            } else {
+                self.canvas.draw_object(
+                    &self.merged_obj.as_ref().unwrap().interpolation(self.ratio),
+                    self.light_direction,
+                );
                 self.ratio += 0.01;
             }
             println!("{}", self.ratio);

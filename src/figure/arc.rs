@@ -83,7 +83,8 @@ impl Arc {
                 return ArcIntersectionResult::N;
             }
             if (res[0].1 < 0. && a.planar_contains(b.a))
-                || (res[1].1 > 1. && !a.planar_contains(b.b)) {
+                || (res[1].1 > 1. && !a.planar_contains(b.b))
+            {
                 return ArcIntersectionResult::N;
             }
             if res[0].1 == 0. && res[1].1 == 1. {

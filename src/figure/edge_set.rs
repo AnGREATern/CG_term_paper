@@ -1,5 +1,5 @@
 use super::edge::Edge;
-use std::{collections::BTreeSet, ops::Deref};
+use std::collections::{btree_set::Iter, BTreeSet};
 
 #[derive(Clone)]
 pub struct EdgeSet(BTreeSet<Edge>);
@@ -27,23 +27,15 @@ impl EdgeSet {
         }
     }
 
+    pub fn iter(&self) -> Iter<'_, Edge> {
+        self.0.iter()
+    }
+
     pub fn remove(&mut self, edge: &Edge) -> bool {
         if let Some(edge) = edge.norm() {
             self.0.remove(&edge)
         } else {
             false
         }
-    }
-
-    pub fn to_vec(&self) -> Vec<&Edge> {
-        self.0.iter().collect()
-    }
-}
-
-impl Deref for EdgeSet {
-    type Target = BTreeSet<Edge>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
     }
 }

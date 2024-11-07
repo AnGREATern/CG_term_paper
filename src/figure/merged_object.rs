@@ -1,15 +1,22 @@
-use crate::EPS;
+use crate::{color::Color, EPS};
 
 use super::{
-    arc::{Arc, ArcIntersectionResult}, edge::Edge, edge_set::EdgeSet, graph::{Graph, RcGraphEdge}, object::Object, projection::Projection, vertex::Vertex
+    arc::{Arc, ArcIntersectionResult},
+    edge::Edge,
+    edge_set::EdgeSet,
+    graph::{Graph, RcGraphEdge},
+    object::Object,
+    projection::Projection,
+    vertex::Vertex,
 };
 
-use std::f64::consts::PI;
 use std::cmp::Ordering;
+use std::f64::consts::PI;
 
 pub struct MergedObject {
     faces: Vec<Vec<usize>>,
     vertexes_pairs: Vec<(Vertex, Vertex)>,
+    color_pairs: (Color, Color),
 }
 
 struct SphereVertex {
@@ -39,7 +46,6 @@ impl MergedObject {
                 origin_id: 2,
             });
         }
-        // println!("SIZE {:?} {:?}", sphere_vertexes.len(), edges.len());
 
         for src_edge in src_proj.edges_iter() {
             edges.insert(src_edge);
@@ -110,9 +116,7 @@ impl MergedObject {
             for i in 0..intersections.len() - 1 {
                 edges.add(intersections[i].1, intersections[i + 1].1);
             }
-            // println!("Ints {:?}", intersections);
         }
-        // println!("SIZE {:?} {:?}", sphere_vertexes.len(), edges.len());
 
         let mut vertexes_pairs = Vec::new();
         for vertex in sphere_vertexes.iter() {
@@ -132,19 +136,12 @@ impl MergedObject {
             };
             p.0 -= src_proj.center();
             p.1 -= dst_proj.center();
-            // println!("p: {:?}, origin: {:?}", p, vertex.origin_id);
             vertexes_pairs.push(p);
         }
-        // println!("Vertexes pairs: {:?}", vertexes_pairs);
-
         // let bbox1 = Vertex::bounding_box(&vertexes_pairs.iter().map(|p| p.0).collect());
         // let bbox2 = Vertex::bounding_box(&vertexes_pairs.iter().map(|p| p.1).collect());
         // let scale1 = (bbox1.1 - bbox1.0).max();
         // let scale2 = (bbox2.1 - bbox2.0).max();
-        // println!("Bounding box 1: {:?}", bbox1);
-        // println!("Bounding box 2: {:?}", bbox2);
-        // println!("Scale 1: {:?}", scale1);
-        // println!("Scale 2: {:?}", scale2);
 
         // let scale = scale1.max(scale2);
         // for p in vertexes_pairs.iter_mut() {
@@ -187,6 +184,7 @@ impl MergedObject {
         Self {
             vertexes_pairs,
             faces: triangle_faces,
+            color_pairs: (src_proj.color().clone(), dst_proj.color().clone()),
         }
     }
 
@@ -195,12 +193,13 @@ impl MergedObject {
         for (v1, v2) in self.vertexes_pairs.iter() {
             new_verts.push(*v1 + (*v2 - *v1) * ratio);
         }
+        let color = Color::join_by_part(
+            self.color_pairs.0.clone(),
+            self.color_pairs.1.clone(),
+            ratio,
+        );
 
-        // let a = Object::new(new_verts, self.faces.clone(), [255, 255, 255, 255]);
-        // println!("Model center {:?}", a.center());
-
-        // a
-        Object::new(new_verts, self.faces.clone(), [255, 255, 255, 255])
+        Object::new(new_verts, self.faces.clone(), color)
     }
 }
 
@@ -212,7 +211,6 @@ impl MergedObject {
             graph.add_pair(e.from, e.to);
         }
 
-        // get next edge
         for i in 0..n {
             let v = verts[i];
             let v_len = v.len();
@@ -231,9 +229,9 @@ impl MergedObject {
                     dir.normalize();
                     let norm = first_dir ^ dir;
                     let cos = first_dir * dir;
-                    let mut angle = if (cos - 1.0).abs() < EPS {
-                        0.0
-                    } else if (cos + 1.0).abs() < EPS {
+                    let mut angle = if (cos - 1.).abs() < EPS {
+                        0.
+                    } else if (cos + 1.).abs() < EPS {
                         PI
                     } else {
                         cos.acos()
@@ -251,7 +249,6 @@ impl MergedObject {
             }
         }
 
-        // get faces
         let mut faces = Vec::new();
         for i in 0..n {
             for e in graph.neighbors(i) {

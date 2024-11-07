@@ -1,9 +1,8 @@
 use super::edge_set::EdgeSet;
 
-use std::rc::{Rc, Weak};
 use std::cell::RefCell;
-use std::cmp::Ordering;
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::BTreeMap;
+use std::rc::{Rc, Weak};
 
 pub type RcGraphEdge = Rc<RefCell<GraphEdge>>;
 pub type WeakGraphEdge = Weak<RefCell<GraphEdge>>;
@@ -11,7 +10,6 @@ pub type WeakGraphEdge = Weak<RefCell<GraphEdge>>;
 pub struct Graph {
     edges: Vec<Vec<RcGraphEdge>>,
     index_map: Vec<usize>,
-    nr_nodes: usize,
     unique_edges: EdgeSet,
 }
 
@@ -31,7 +29,6 @@ impl Graph {
         Self {
             edges: vec![Vec::new(); n],
             index_map,
-            nr_nodes: n,
             unique_edges: EdgeSet::new(),
         }
     }
