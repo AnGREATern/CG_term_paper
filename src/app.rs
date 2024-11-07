@@ -4,6 +4,7 @@ use crate::egui::{
     widgets::color_picker, CentralPanel, Color32, ColorImage, Context, Event, Mesh, Pos2, Rect,
     Response, Sense, Shape, Ui,
 };
+use crate::figure::merged_object::MergedObject;
 use crate::figure::object::Object;
 use crate::figure::projection::Projection;
 use crate::figure::vertex::Vertex;
@@ -12,12 +13,14 @@ use eframe::egui::{PointerButton, Vec2};
 use rfd::FileDialog;
 
 use crate::canvas::Canvas;
-use crate::{BACKGROUND_COLOR, DEFAULT_SCALE, SPHERE_RADIUS, WINDOW_SIZE};
+use crate::{BACKGROUND_COLOR, DEFAULT_SCALE, EPS, SPHERE_RADIUS, WINDOW_SIZE};
 
 pub struct Painting {
     is_start_obj_viewed: bool,
     start_obj: Option<Object>,
     result_obj: Option<Object>,
+    merged_obj: Option<MergedObject>,
+    ratio: f64,
     canvas: Canvas,
     obj_color: Color32,
     is_movement_access: bool,
@@ -30,6 +33,8 @@ impl Default for Painting {
         let is_start_obj_viewed = true;
         let start_obj = None;
         let result_obj = None;
+        let merged_obj = None;
+        let ratio = 0.;
         let canvas = Canvas::new(WINDOW_SIZE.0, WINDOW_SIZE.1, &BACKGROUND_COLOR);
         let obj_color = Color32::WHITE;
         let is_movement_access = false;
@@ -39,6 +44,8 @@ impl Default for Painting {
             is_start_obj_viewed,
             start_obj,
             result_obj,
+            merged_obj,
+            ratio,
             canvas,
             obj_color,
             is_movement_access,
@@ -128,18 +135,32 @@ impl Painting {
                 self.move_light_src_nested_menus(ui)
             });
             // ui.menu_button("Move object", |ui| self.move_obj(ui));
-            ui.menu_button("Run morphing", |ui| self.morph(ui));
+            ui.menu_button("Morphing", |ui| self.morph(ui));
         });
     }
 
     fn morph(&mut self, ui: &mut Ui) {
-        if self.start_obj.is_none() || self.result_obj.is_none() {
-            return;
-        }
+        if ui.button("Start").clicked() {
+            if self.start_obj.is_none() || self.result_obj.is_none() {
+                return;
+            }
 
-        let start_proj = Projection::new(self.start_obj.as_ref().unwrap(), SPHERE_RADIUS);
-        let result_proj = Projection::new(self.result_obj.as_ref().unwrap(), SPHERE_RADIUS);
-        todo!();
+            let start_proj = Projection::new(self.start_obj.clone().unwrap(), SPHERE_RADIUS);
+            let result_proj = Projection::new(self.result_obj.clone().unwrap(), SPHERE_RADIUS);
+            self.merged_obj = Some(MergedObject::new(start_proj, result_proj));
+            // println!("START");
+            // let mut ratio = 0.05;
+            // while ratio <= 1. {
+            //     println!("{}", ratio);
+            //     self.canvas.clear();
+            //     self.canvas.draw_object(&merged_obj.interpolation(ratio as f64), self.light_direction);
+            //     ratio += 0.05;
+            //     let ten_millis = std::time::Duration::from_secs(2);
+            //     std::thread::sleep(ten_millis);
+            //     self.ui_canvas(ui);
+            // }
+            // println!("END");
+        }
     }
 
     fn move_light_src_nested_menus(&mut self, ui: &mut Ui) {
@@ -264,9 +285,29 @@ impl Painting {
         }
     }
 
-    fn ui_canvas(&self, ui: &mut Ui) -> Response {
+    fn ui_canvas(&mut self, ui: &mut Ui) -> Response {
         let (response, painter) =
             ui.allocate_painter(ui.available_size_before_wrap(), Sense::drag());
+
+        if self.merged_obj.is_some() {
+            self.canvas.clear();
+            if self.ratio.abs() < EPS {
+                self.is_start_obj_viewed = true;
+                self.draw_object();
+                self.ratio += 0.01;
+            }
+            else if (self.ratio - 1.).abs() < EPS {
+                self.is_start_obj_viewed = false;
+                self.draw_object();
+                self.merged_obj = None;
+                self.ratio = 0.;
+            }
+            else {
+                self.canvas.draw_object(&self.merged_obj.as_ref().unwrap().interpolation(self.ratio), self.light_direction);
+                self.ratio += 0.01;
+            }
+            println!("{}", self.ratio);
+        }
 
         let image = ColorImage::from_rgba_unmultiplied(
             [WINDOW_SIZE.0 as usize, WINDOW_SIZE.1 as usize],

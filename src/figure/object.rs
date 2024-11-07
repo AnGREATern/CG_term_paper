@@ -2,8 +2,10 @@ use super::vertex::Vertex;
 use std::{
     fs::File,
     io::{self, BufRead, BufReader},
+    slice::Iter,
 };
 
+#[derive(Clone)]
 pub struct Object {
     vertexes: Vec<Vertex>,
     faces: Vec<Vec<usize>>,
@@ -76,6 +78,22 @@ impl Object {
         }
 
         res
+    }
+
+    pub fn face_indexes(&self, index: usize) -> Vec<usize> {
+        self.faces[index].clone()
+    }
+
+    pub fn nvertexes(&self) -> usize {
+        self.vertexes.len()
+    }
+
+    pub fn vertex(&self, index: usize) -> Vertex {
+        self.vertexes[index]
+    }
+
+    pub fn vertexes_iter(&self) -> Iter<'_, Vertex> {
+        self.vertexes.iter()
     }
 
     pub fn mov(&mut self, delta: Vertex) {

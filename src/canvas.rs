@@ -12,7 +12,7 @@ pub struct Canvas {
 
 impl Canvas {
     pub fn new(width: u32, height: u32, color: &[u8; 4]) -> Self {
-        let frame = vec![0; (4 * width * height) as usize];
+        let frame = vec![0; color.len() * (width * height) as usize];
         let zbuffer = vec![MIN; (height * width) as usize];
         let color = color.clone();
         let mut res = Self {
@@ -128,7 +128,7 @@ impl Canvas {
     }
 
     fn set_pixel(&mut self, x: u32, y: u32, color: &[u8; 4]) {
-        let pixel = 4 * (x + y * self.width) as usize;
-        self.frame[pixel..pixel + 4].copy_from_slice(color);
+        let pixel = color.len() * (x + y * self.width) as usize;
+        self.frame[pixel..pixel + color.len()].copy_from_slice(color);
     }
 }
