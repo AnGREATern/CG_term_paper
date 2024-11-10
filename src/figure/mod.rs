@@ -1,2 +1,9 @@
+pub mod arc;
+pub mod edge;
+pub mod edge_set;
+pub mod graph;
+pub mod merged_object;
 pub mod object;
+pub mod projection;
+pub mod triangle;
 pub mod vertex;

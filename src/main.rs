@@ -5,6 +5,7 @@ use eframe::egui;
 
 mod app;
 mod canvas;
+mod color;
 mod consts;
 mod figure;
 

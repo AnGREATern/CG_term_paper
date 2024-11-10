@@ -1,8 +1,9 @@
-use crate::consts::DEFAULT_SCALE;
+use crate::DEFAULT_SCALE;
 
-use std::ops::{Add, BitXor, Mul, Sub};
+use std::cmp::Ordering;
+use std::ops::{Add, AddAssign, BitXor, Div, DivAssign, Mul, Neg, Sub, SubAssign};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default, PartialEq, PartialOrd, Debug)]
 pub struct Vertex {
     pub x: f64,
     pub y: f64,
@@ -25,6 +26,12 @@ impl Vertex {
         res
     }
 
+    pub fn project_to_sphere(self, center: Vertex, radius: f64) -> Vertex {
+        let dir = self - center;
+
+        dir * (radius / dir.len())
+    }
+
     pub fn round(&mut self) {
         self.x = self.x.round();
         self.y = self.y.round();
@@ -32,6 +39,14 @@ impl Vertex {
 
     pub fn len(&self) -> f64 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
+    }
+
+    pub fn len2(&self) -> f64 {
+        self.x * self.x + self.y * self.y + self.z * self.z
+    }
+
+    pub fn triple_prod(a: Vertex, b: Vertex, c: Vertex) -> f64 {
+        (b ^ c) * a
     }
 
     pub fn normalize(&mut self) {
@@ -63,6 +78,43 @@ impl Vertex {
         self.y = y3;
         self.z = z2;
     }
+
+    // pub fn bounding_box(verts: &Vec<Self>) -> (Self, Self) {
+    //     let mut bbox = (Self::new(MAX, MAX, MAX), Self::new(MIN, MIN, MIN));
+    //     for v in verts {
+    //         if v.x < bbox.0.x {
+    //             bbox.0.x = v.x
+    //         }
+    //         if v.y < bbox.0.y {
+    //             bbox.0.y = v.y
+    //         }
+    //         if v.z < bbox.0.z {
+    //             bbox.0.z = v.z
+    //         }
+
+    //         if v.x > bbox.1.x {
+    //             bbox.1.x = v.x
+    //         }
+    //         if v.y > bbox.1.y {
+    //             bbox.1.y = v.y
+    //         }
+    //         if v.z > bbox.1.z {
+    //             bbox.1.z = v.z
+    //         }
+    //     }
+
+    //     bbox
+    // }
+
+    // pub fn max(self) -> f64 {
+    //     if self.x > self.y && self.x > self.z {
+    //         self.x
+    //     } else if self.y > self.z {
+    //         self.y
+    //     } else {
+    //         self.z
+    //     }
+    // }
 }
 
 impl Add for Vertex {
@@ -77,6 +129,38 @@ impl Add for Vertex {
     }
 }
 
+impl AddAssign for Vertex {
+    fn add_assign(&mut self, other: Self) {
+        self.x += other.x;
+        self.y += other.y;
+        self.z += other.z;
+    }
+}
+
+impl SubAssign for Vertex {
+    fn sub_assign(&mut self, other: Self) {
+        self.x -= other.x;
+        self.y -= other.y;
+        self.z -= other.z;
+    }
+}
+
+impl DivAssign<usize> for Vertex {
+    fn div_assign(&mut self, other: usize) {
+        self.x /= other as f64;
+        self.y /= other as f64;
+        self.z /= other as f64;
+    }
+}
+
+impl DivAssign<f64> for Vertex {
+    fn div_assign(&mut self, other: f64) {
+        self.x /= other;
+        self.y /= other;
+        self.z /= other;
+    }
+}
+
 impl Sub for Vertex {
     type Output = Vertex;
 
@@ -85,6 +169,18 @@ impl Sub for Vertex {
             x: self.x - other.x,
             y: self.y - other.y,
             z: self.z - other.z,
+        }
+    }
+}
+
+impl Neg for Vertex {
+    type Output = Vertex;
+
+    fn neg(self) -> Vertex {
+        Vertex {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
         }
     }
 }
@@ -118,5 +214,27 @@ impl Mul<f64> for Vertex {
             y: self.y * other,
             z: self.z * other,
         }
+    }
+}
+
+impl Div<f64> for Vertex {
+    type Output = Vertex;
+
+    fn div(self, other: f64) -> Vertex {
+        Vertex {
+            x: self.x / other,
+            y: self.y / other,
+            z: self.z / other,
+        }
+    }
+}
+
+impl Eq for Vertex {}
+
+impl Ord for Vertex {
+    fn cmp(&self, other: &Self) -> Ordering {
+        (self.x, self.y, self.z)
+            .partial_cmp(&(other.x, other.y, other.z))
+            .unwrap_or(Ordering::Equal)
     }
 }

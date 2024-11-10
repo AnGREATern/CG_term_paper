@@ -1,17 +1,21 @@
+use crate::color::Color;
+
 use super::vertex::Vertex;
 use std::{
     fs::File,
     io::{self, BufRead, BufReader},
+    slice::Iter,
 };
 
+#[derive(Clone)]
 pub struct Object {
-    pub vertexes: Vec<Vertex>,
+    vertexes: Vec<Vertex>,
     faces: Vec<Vec<usize>>,
-    color: [u8; 4],
+    color: Color,
 }
 
 impl Object {
-    pub fn new(vertexes: Vec<Vertex>, faces: Vec<Vec<usize>>, color: [u8; 4]) -> Self {
+    pub fn new(vertexes: Vec<Vertex>, faces: Vec<Vec<usize>>, color: Color) -> Self {
         Self {
             vertexes,
             faces,
@@ -19,7 +23,7 @@ impl Object {
         }
     }
 
-    pub fn load(filename: &str, color: [u8; 4]) -> io::Result<Self> {
+    pub fn load(filename: &str, color: Color) -> io::Result<Self> {
         let file = File::open(filename)?;
         let reader = BufReader::new(file);
 
@@ -49,12 +53,24 @@ impl Object {
         Ok(Self::new(vertexes, faces, color))
     }
 
-    pub fn color(&self) -> [u8; 4] {
-        self.color
+    pub fn color(&self) -> Color {
+        self.color.clone()
     }
 
     pub fn nfaces(&self) -> usize {
         self.faces.len()
+    }
+
+    pub fn center(&self) -> Vertex {
+        let mut center = Vertex::default();
+        for vertex in self.vertexes.iter() {
+            center += *vertex;
+        }
+        if self.vertexes.len() > 0 {
+            center /= self.vertexes.len();
+        }
+
+        center
     }
 
     pub fn face(&self, index: usize) -> Vec<Vertex> {
@@ -64,6 +80,22 @@ impl Object {
         }
 
         res
+    }
+
+    pub fn face_indexes(&self, index: usize) -> Vec<usize> {
+        self.faces[index].clone()
+    }
+
+    pub fn nvertexes(&self) -> usize {
+        self.vertexes.len()
+    }
+
+    pub fn vertex(&self, index: usize) -> Vertex {
+        self.vertexes[index]
+    }
+
+    pub fn vertexes_iter(&self) -> Iter<'_, Vertex> {
+        self.vertexes.iter()
     }
 
     pub fn mov(&mut self, delta: Vertex) {
