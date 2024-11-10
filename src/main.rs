@@ -20,7 +20,7 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     eframe::run_native(
-        "Canva",
+        "Morphing",
         options,
         Box::new(|_cc| {
             // // This gives us image support:
