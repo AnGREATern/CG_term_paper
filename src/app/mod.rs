@@ -1,3 +1,4 @@
+mod events;
 mod labels;
 mod menus;
 mod ops;
@@ -11,7 +12,6 @@ use crate::figure::merged_object::MergedObject;
 use crate::figure::object::Object;
 use crate::figure::vertex::Vertex;
 use crate::{BACKGROUND_COLOR, EPS, RATIO_STEP, WINDOW_SIZE};
-use eframe::egui::PointerButton;
 
 enum Mode {
     StartObjView,
@@ -65,37 +65,18 @@ impl eframe::App for Painting {
             self.ui_canvas(ui);
             ui.input(|i| {
                 for event in &i.raw.events {
-                    // if let Event::Key { key, .. } = event {
-                    //     match key {
-                    //         ArrowLeft => self.ratio -= RATIO_STEP,
-                    //         ArrowRight => self.ratio += RATIO_STEP,
-                    //         _ => (),
-                    //     }
-                    // }
-                    if let Event::MouseMoved(pos) = event {
-                        if self.is_movement_access {
-                            self.move_object(pos);
-                        }
-                        if self.is_rotating_access {
-                            self.rotate_object(pos);
-                        }
-                    }
-                    if let Event::PointerButton {
-                        button,
-                        pressed,
-                        modifiers,
-                        ..
-                    } = event
-                    {
-                        match button {
-                            PointerButton::Primary => {
-                                self.is_movement_access = *pressed && modifiers.ctrl
-                            }
-                            PointerButton::Secondary => {
-                                self.is_rotating_access = *pressed && modifiers.ctrl
-                            }
-                            _ => {}
-                        }
+                    match event {
+                        Event::MouseMoved(pos) => self.mouse_moved(pos),
+                        Event::PointerButton {
+                            button,
+                            pressed,
+                            modifiers,
+                            ..
+                        } => self.pointer_button(*button, *pressed, *modifiers),
+                        Event::MouseWheel {
+                            modifiers, delta, ..
+                        } => self.mouse_wheel(*modifiers, delta),
+                        _ => (),
                     }
                 }
             })

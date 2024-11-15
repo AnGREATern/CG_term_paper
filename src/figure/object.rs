@@ -11,14 +11,17 @@ use std::{
 pub struct Object {
     vertexes: Vec<Vertex>,
     faces: Vec<Vec<usize>>,
+    center: Vertex,
     color: Color,
 }
 
 impl Object {
     pub fn new(vertexes: Vec<Vertex>, faces: Vec<Vec<usize>>, color: Color) -> Self {
+        let center = Vertex::center(&vertexes);
         Self {
             vertexes,
             faces,
+            center,
             color,
         }
     }
@@ -61,16 +64,8 @@ impl Object {
         self.faces.len()
     }
 
-    pub fn center(&self) -> Vertex {
-        let mut center = Vertex::default();
-        for vertex in self.vertexes.iter() {
-            center += *vertex;
-        }
-        if self.vertexes.len() > 0 {
-            center /= self.vertexes.len();
-        }
-
-        center
+    pub fn center(&self) -> &Vertex {
+        &self.center
     }
 
     pub fn face(&self, index: usize) -> Vec<Vertex> {
@@ -99,8 +94,15 @@ impl Object {
     }
 
     pub fn mov(&mut self, delta: Vertex) {
+        self.center.mov(delta);
         for vertex in self.vertexes.iter_mut() {
             vertex.mov(delta);
+        }
+    }
+
+    pub fn scale(&mut self, k: f64) {
+        for vertex in self.vertexes.iter_mut() {
+            vertex.scale(&self.center, k);
         }
     }
 

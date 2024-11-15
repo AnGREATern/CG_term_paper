@@ -13,7 +13,7 @@ pub struct Projection {
 
 impl Projection {
     pub fn new(object: Object, radius: f64) -> Self {
-        let center = object.center();
+        let center = *object.center();
         let nfaces = object.nfaces();
         let mut sphere_vertexes = vec![];
         let mut edges = EdgeSet::new();
@@ -55,12 +55,12 @@ impl Projection {
         self.edges.iter()
     }
 
-    pub fn center(&self) -> Vertex {
+    pub fn center(&self) -> &Vertex {
         self.object.center()
     }
 
     pub fn project_from_sphere(&self, v: Vertex) -> Vertex {
-        let center = self.object.center();
+        let center = *self.object.center();
         for ind in 0..self.object.nfaces() {
             let f = self.object.face(ind);
             let tri = Triangle::new(f[0], f[1], f[2]);
