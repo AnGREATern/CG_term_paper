@@ -49,6 +49,18 @@ impl Vertex {
         (b ^ c) * a
     }
 
+    pub fn center(vertexes: &Vec<Vertex>) -> Vertex {
+        let mut center = Vertex::default();
+        for vertex in vertexes.iter() {
+            center += *vertex;
+        }
+        if vertexes.len() > 0 {
+            center /= vertexes.len();
+        }
+
+        center
+    }
+
     pub fn normalize(&mut self) {
         let len = self.len();
         self.x /= len;
@@ -57,7 +69,14 @@ impl Vertex {
     }
 
     pub fn mov(&mut self, delta: Vertex) {
-        *self = *self + delta;
+        *self += delta;
+    }
+
+    pub fn scale(&mut self, center: &Vertex, k: f64) {
+        let center = *center;
+        *self -= center;
+        *self = *self * k;
+        *self += center;
     }
 
     pub fn rotate(&mut self, angles: Vertex) {

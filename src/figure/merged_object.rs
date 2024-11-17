@@ -134,8 +134,8 @@ impl MergedObject {
                     dst_proj.project_from_sphere(vertex.vertex),
                 ),
             };
-            p.0 -= src_proj.center();
-            p.1 -= dst_proj.center();
+            p.0 -= *src_proj.center();
+            p.1 -= *dst_proj.center();
             vertexes_pairs.push(p);
         }
         // let bbox1 = Vertex::bounding_box(&vertexes_pairs.iter().map(|p| p.0).collect());

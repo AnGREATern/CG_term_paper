@@ -17,18 +17,6 @@ impl Painting {
             let start_proj = Projection::new(self.start_obj.clone().unwrap(), SPHERE_RADIUS);
             let result_proj = Projection::new(self.result_obj.clone().unwrap(), SPHERE_RADIUS);
             self.merged_obj = Some(MergedObject::new(start_proj, result_proj));
-            // println!("START");
-            // let mut ratio = 0.05;
-            // while ratio <= 1. {
-            //     println!("{}", ratio);
-            //     self.canvas.clear();
-            //     self.canvas.draw_object(&merged_obj.interpolation(ratio as f64), self.light_direction);
-            //     ratio += 0.05;
-            //     let ten_millis = std::time::Duration::from_secs(2);
-            //     std::thread::sleep(ten_millis);
-            //     self.ui_canvas(ui);
-            // }
-            // println!("END");
         }
     }
 
@@ -62,6 +50,19 @@ impl Painting {
         };
         if let Some(object) = object {
             object.rotate(delta);
+            self.draw_object();
+        }
+    }
+
+    pub fn scale_object(&mut self, delta: f32) {
+        let k = (delta + 1.5) as f64;
+        let object = match self.mode {
+            Mode::StartObjView => &mut self.start_obj,
+            Mode::ResultObjView => &mut self.result_obj,
+            _ => &mut None,
+        };
+        if let Some(object) = object {
+            object.scale(k);
             self.draw_object();
         }
     }
