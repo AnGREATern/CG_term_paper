@@ -108,7 +108,6 @@ impl Painting {
                 );
                 self.ratio += RATIO_STEP;
             }
-            println!("{}", self.ratio);
         }
 
         let image = ColorImage::from_rgba_unmultiplied(
