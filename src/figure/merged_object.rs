@@ -26,7 +26,7 @@ struct SphereVertex {
 }
 
 impl MergedObject {
-    pub fn new(src_proj: Projection, dst_proj: Projection) -> Self {
+    pub fn new(src_proj: Projection, dst_proj: Projection) -> Result<Self, ()> {
         let n = src_proj.nvertexes();
         let m = dst_proj.nvertexes();
         let mut sphere_vertexes = Vec::with_capacity(n + m);
@@ -123,15 +123,15 @@ impl MergedObject {
             let mut p = match vertex.origin_id {
                 1 => (
                     src_proj.vertex(vertex.index),
-                    dst_proj.project_from_sphere(vertex.vertex),
+                    dst_proj.project_from_sphere(vertex.vertex)?,
                 ),
                 2 => (
-                    src_proj.project_from_sphere(vertex.vertex),
+                    src_proj.project_from_sphere(vertex.vertex)?,
                     dst_proj.vertex(vertex.index),
                 ),
                 _ => (
-                    src_proj.project_from_sphere(vertex.vertex),
-                    dst_proj.project_from_sphere(vertex.vertex),
+                    src_proj.project_from_sphere(vertex.vertex)?,
+                    dst_proj.project_from_sphere(vertex.vertex)?,
                 ),
             };
             p.0 -= *src_proj.center();
@@ -181,11 +181,11 @@ impl MergedObject {
             }
         }
 
-        Self {
+        Ok(Self {
             vertexes_pairs,
             faces: triangle_faces,
             color_pairs: (src_proj.color().clone(), dst_proj.color().clone()),
-        }
+        })
     }
 
     pub fn interpolation(&self, ratio: f64) -> Object {

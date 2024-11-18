@@ -59,15 +59,18 @@ impl Projection {
         self.object.center()
     }
 
-    pub fn project_from_sphere(&self, v: Vertex) -> Vertex {
+    pub fn project_from_sphere(&self, v: Vertex) -> Result<Vertex, ()> {
         let center = *self.object.center();
         for ind in 0..self.object.nfaces() {
             let f = self.object.face(ind);
             let tri = Triangle::new(f[0], f[1], f[2]);
             if let Some(int) = tri.intersect(center, center + v) {
-                return int;
+                return Ok(int);
             }
         }
-        panic!("No intersect found! {}, {}, {}", v.x, v.y, v.z);
+
+        Err(())
+        // panic!("No intersect found! {}, {}, {}", v.x, v.y, v.z);
+        // v
     }
 }

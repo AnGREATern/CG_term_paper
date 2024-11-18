@@ -16,7 +16,12 @@ impl Painting {
 
             let start_proj = Projection::new(self.start_obj.clone().unwrap(), SPHERE_RADIUS);
             let result_proj = Projection::new(self.result_obj.clone().unwrap(), SPHERE_RADIUS);
-            self.merged_obj = Some(MergedObject::new(start_proj, result_proj));
+            // let res = MergedObject::new(start_proj, result_proj);
+            if let Ok(obj) = MergedObject::new(start_proj, result_proj) {
+                self.merged_obj = Some(obj);
+            } else {
+                println!("Некорректная модель");
+            }
         }
     }
 
