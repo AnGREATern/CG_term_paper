@@ -79,7 +79,10 @@ impl eframe::App for Painting {
                         _ => (),
                     }
                 }
-            })
+            });
+            if let Mode::Morphing = self.mode {
+                ctx.request_repaint();
+            }
         });
     }
 }
@@ -125,7 +128,6 @@ impl Painting {
             Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
             Color32::WHITE,
         );
-        // painter.add(Shape::LineSegment { points: (), stroke: () })
         painter.add(Shape::mesh(mesh));
 
         response

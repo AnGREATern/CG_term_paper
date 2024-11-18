@@ -35,7 +35,7 @@ impl Triangle {
         let t = (a - self.a) * normal / div;
         let v = a + (b - a) * t;
 
-        if t > EPS && self.contains(v) {
+        if t > -EPS && self.contains(v) {
             Some(v)
         } else {
             None
