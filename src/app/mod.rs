@@ -42,7 +42,7 @@ impl Default for Painting {
         let obj_color = Color32::WHITE;
         let is_movement_access = false;
         let is_rotating_access = false;
-        let light_direction = Vertex::new(0., 0., -1.);
+        let light_direction = Vertex::new(0., 0., 1.);
         Self {
             mode,
             start_obj,
