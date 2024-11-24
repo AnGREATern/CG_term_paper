@@ -41,4 +41,23 @@ impl Triangle {
             None
         }
     }
+
+    pub fn normal_inside(&self, v: Vertex, normals: Vec<Vertex>) -> Vertex {
+        let av = v - self.a;
+        let bv = v - self.b;
+        let ab = self.b - self.a;
+        let ac = self.c - self.a;
+        let bc = self.c - self.b;
+
+        let s_abv = (av ^ ab).len() / 2.;
+        let s_bcv = (bv ^ bc).len() / 2.;
+        let s_acv = (av ^ ac).len() / 2.;
+        let s_abc = (ab ^ ac).len() / 2.;
+
+        let t1 = s_bcv / s_abc;
+        let t2 = s_acv / s_abc;
+        let t3 = s_abv / s_abc;
+
+        normals[0] * t1 + normals[1] * t2 + normals[2] * t3
+    }
 }

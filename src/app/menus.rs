@@ -25,22 +25,22 @@ impl Painting {
 
     fn move_light_src_nested_menus(&mut self, ui: &mut Ui) {
         if ui.button("Move right").clicked() {
-            let delta = Vertex::new(-0.1, 0., 0.);
-            self.light_direction.mov(delta);
-            self.draw_object();
-        }
-        if ui.button("Move left").clicked() {
             let delta = Vertex::new(0.1, 0., 0.);
             self.light_direction.mov(delta);
             self.draw_object();
         }
+        if ui.button("Move left").clicked() {
+            let delta = Vertex::new(-0.1, 0., 0.);
+            self.light_direction.mov(delta);
+            self.draw_object();
+        }
         if ui.button("Move up").clicked() {
-            let delta = Vertex::new(0., 0.1, 0.);
+            let delta = Vertex::new(0., -0.1, 0.);
             self.light_direction.mov(delta);
             self.draw_object();
         }
         if ui.button("Move down").clicked() {
-            let delta = Vertex::new(0.0, -0.1, 0.);
+            let delta = Vertex::new(0.0, 0.1, 0.);
             self.light_direction.mov(delta);
             self.draw_object();
         }

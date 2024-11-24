@@ -3,7 +3,7 @@ use crate::DEFAULT_SCALE;
 use std::cmp::Ordering;
 use std::ops::{Add, AddAssign, BitXor, Div, DivAssign, Mul, Neg, Sub, SubAssign};
 
-#[derive(Clone, Copy, Default, PartialEq, PartialOrd, Debug)]
+#[derive(Clone, Copy, Default, PartialEq, PartialOrd)]
 pub struct Vertex {
     pub x: f64,
     pub y: f64,

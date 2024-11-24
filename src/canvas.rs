@@ -46,29 +46,20 @@ impl Canvas {
 
     pub fn draw_object(&mut self, object: &Object, mut light_direction: Vertex) {
         light_direction.normalize();
-        let color = object.color();
         for face_ind in 0..object.nfaces() {
-            let world_coords = object.face(face_ind);
-            let mut n = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
-            n.normalize();
-            let intensity = light_direction * n;
-            let screen_coords = vec![
-                world_coords[0].world_to_screen(self.height, self.width),
-                world_coords[1].world_to_screen(self.height, self.width),
-                world_coords[2].world_to_screen(self.height, self.width),
-            ];
-            let mut cur_color = color.clone();
-            if intensity > 0. {
-                cur_color.set_rgb(
-                    (cur_color.r() as f64 * intensity) as u8,
-                    (cur_color.g() as f64 * intensity) as u8,
-                    (cur_color.b() as f64 * intensity) as u8,
-                );
-            } else {
-                cur_color = self.color.clone();
+            let world_coords = object.face_coords(face_ind);
+            let mut intensities = vec![];
+            for normal in object.face_normals(face_ind) {
+                intensities.push(light_direction * normal);
             }
-
-            self.draw_triangle(screen_coords, cur_color);
+            let mut screen_coords = vec![];
+            for i in 0..3 {
+                screen_coords.push((
+                    world_coords[i].world_to_screen(self.height, self.width),
+                    intensities[i],
+                ));
+            }
+            self.draw_triangle(screen_coords, object.color());
         }
     }
 }
@@ -80,38 +71,46 @@ impl Canvas {
         }
     }
 
-    fn draw_triangle(&mut self, mut coords: Vec<Vertex>, color: Color) {
-        if coords[0].y == coords[1].y && coords[1].y == coords[2].y {
+    fn draw_triangle(&mut self, mut coords: Vec<(Vertex, f64)>, color: Color) {
+        if coords[0].0.y == coords[1].0.y && coords[1].0.y == coords[2].0.y {
             return;
         }
 
-        coords.sort_by(|a, b| a.y.partial_cmp(&b.y).expect("draw_triangle: sorting"));
-        let total_height = (coords[2].y - coords[0].y) as i32;
+        coords.sort_by(|a, b| a.0.y.partial_cmp(&b.0.y).expect("draw_triangle: sorting"));
+        let total_height = (coords[2].0.y - coords[0].0.y) as i32;
         for i in 0..total_height {
             let is_second_half =
-                (i > (coords[1].y - coords[0].y) as i32) || (coords[1].y == coords[0].y);
+                (i > (coords[1].0.y - coords[0].0.y) as i32) || (coords[1].0.y == coords[0].0.y);
             let segment_height = if is_second_half {
-                coords[2].y - coords[1].y
+                coords[2].0.y - coords[1].0.y
             } else {
-                coords[1].y - coords[0].y
+                coords[1].0.y - coords[0].0.y
             };
             let alpha = i as f64 / total_height as f64;
+            let mut a_side_intensity = coords[0].1 + (coords[2].1 - coords[0].1) * alpha;
             let beta = if is_second_half {
-                (i as f64 - coords[1].y + coords[0].y) / segment_height
+                (i as f64 - coords[1].0.y + coords[0].0.y) / segment_height
             } else {
                 i as f64 / segment_height
             };
-            let mut a = coords[0] + (coords[2] - coords[0]) * alpha;
+            let mut a = coords[0].0 + (coords[2].0 - coords[0].0) * alpha;
             let mut b = if is_second_half {
-                coords[1] + (coords[2] - coords[1]) * beta
+                coords[1].0 + (coords[2].0 - coords[1].0) * beta
             } else {
-                coords[0] + (coords[1] - coords[0]) * beta
+                coords[0].0 + (coords[1].0 - coords[0].0) * beta
+            };
+            let mut b_side_intensity = if is_second_half {
+                coords[1].1 + (coords[2].1 - coords[1].1) * beta
+            } else {
+                coords[0].1 + (coords[1].1 - coords[0].1) * beta
             };
             a.round();
             b.round();
             if a.x > b.x {
                 swap(&mut a, &mut b);
+                swap(&mut a_side_intensity, &mut b_side_intensity);
             }
+
             for j in a.x as i32..=b.x as i32 {
                 let phi = if a.x == b.x {
                     1.
@@ -123,7 +122,14 @@ impl Canvas {
                 let idx = (p.x as u32 + p.y as u32 * self.width) as usize;
                 if idx < self.zbuffer.len() && self.zbuffer[idx] < p.z {
                     self.zbuffer[idx] = p.z;
-                    self.set_pixel(p.x.round() as u32, p.y.round() as u32, color.clone());
+                    let p_int = a_side_intensity + (b_side_intensity - a_side_intensity) * phi;
+                    let mut cur_color = color.clone();
+                    cur_color.set_rgb(
+                        (cur_color.r() as f64 * p_int) as u8,
+                        (cur_color.g() as f64 * p_int) as u8,
+                        (cur_color.b() as f64 * p_int) as u8,
+                    );
+                    self.set_pixel(p.x.round() as u32, p.y.round() as u32, cur_color);
                 }
             }
         }

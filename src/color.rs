@@ -1,6 +1,6 @@
 use crate::EPS;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Color(u8, u8, u8, u8);
 
 impl Color {
@@ -38,7 +38,7 @@ impl Color {
         [self.0, self.1, self.2, self.3]
     }
 
-    pub fn join_by_part(c1: Color, c2: Color, ratio: f64) -> Color {
+    pub fn interpolation(c1: Color, c2: Color, ratio: f64) -> Color {
         if ratio < EPS || (ratio - 1.) > EPS {
             panic!("Incorrect ratio");
         }

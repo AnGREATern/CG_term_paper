@@ -16,6 +16,7 @@ use std::f64::consts::PI;
 pub struct MergedObject {
     faces: Vec<Vec<usize>>,
     vertexes_pairs: Vec<(Vertex, Vertex)>,
+    normals_pairs: Vec<(Vertex, Vertex)>,
     color_pairs: (Color, Color),
 }
 
@@ -119,39 +120,33 @@ impl MergedObject {
         }
 
         let mut vertexes_pairs = Vec::new();
+        let mut normals_pairs = Vec::new();
+        let mut vp = (Vertex::default(), Vertex::default());
+        let mut np = (Vertex::default(), Vertex::default());
         for vertex in sphere_vertexes.iter() {
-            let mut p = match vertex.origin_id {
-                1 => (
-                    src_proj.vertex(vertex.index),
-                    dst_proj.project_from_sphere(vertex.vertex)?,
-                ),
-                2 => (
-                    src_proj.project_from_sphere(vertex.vertex)?,
-                    dst_proj.vertex(vertex.index),
-                ),
-                _ => (
-                    src_proj.project_from_sphere(vertex.vertex)?,
-                    dst_proj.project_from_sphere(vertex.vertex)?,
-                ),
+            match vertex.origin_id {
+                1 => {
+                    let dst = dst_proj.project_from_sphere(vertex.vertex)?;
+                    vp = (src_proj.vertex(vertex.index), dst.0);
+                    np = (src_proj.normal(vertex.index), dst.1);
+                }
+                2 => {
+                    let src = src_proj.project_from_sphere(vertex.vertex)?;
+                    vp = (src.0, dst_proj.vertex(vertex.index));
+                    np = (src.1, dst_proj.normal(vertex.index));
+                }
+                _ => {
+                    let src = src_proj.project_from_sphere(vertex.vertex)?;
+                    let dst = dst_proj.project_from_sphere(vertex.vertex)?;
+                    vp = (src.0, dst.0);
+                    np = (src.1, dst.1);
+                }
             };
-            p.0 -= *src_proj.center();
-            p.1 -= *dst_proj.center();
-            vertexes_pairs.push(p);
+            vp.0 -= *src_proj.center();
+            vp.1 -= *dst_proj.center();
+            vertexes_pairs.push(vp);
+            normals_pairs.push(np);
         }
-        // let bbox1 = Vertex::bounding_box(&vertexes_pairs.iter().map(|p| p.0).collect());
-        // let bbox2 = Vertex::bounding_box(&vertexes_pairs.iter().map(|p| p.1).collect());
-        // let scale1 = (bbox1.1 - bbox1.0).max();
-        // let scale2 = (bbox2.1 - bbox2.0).max();
-
-        // let scale = scale1.max(scale2);
-        // for p in vertexes_pairs.iter_mut() {
-        //     p.0 /= scale;
-        //     p.1 /= scale;
-        // }
-        // for p in vertexes_pairs.iter_mut() {
-        //     p.0 /= scale1;
-        //     p.1 /= scale2;
-        // }
 
         let sphere_vertexes = sphere_vertexes.iter().map(|v| v.vertex).collect();
         let faces = Self::resolve_faces(&sphere_vertexes, &edges);
@@ -183,23 +178,35 @@ impl MergedObject {
 
         Ok(Self {
             vertexes_pairs,
+            normals_pairs,
             faces: triangle_faces,
             color_pairs: (src_proj.color().clone(), dst_proj.color().clone()),
         })
     }
 
     pub fn interpolation(&self, ratio: f64) -> Object {
-        let mut new_verts = Vec::new();
-        for (v1, v2) in self.vertexes_pairs.iter() {
-            new_verts.push(*v1 + (*v2 - *v1) * ratio);
-        }
-        let color = Color::join_by_part(
+        let vertexes = self
+            .vertexes_pairs
+            .iter()
+            .map(|(v1, v2)| *v1 + (*v2 - *v1) * ratio)
+            .collect();
+        let normals = self
+            .normals_pairs
+            .iter()
+            .map(|(v1, v2)| *v1 + (*v2 - *v1) * ratio)
+            .collect();
+        let faces = self
+            .faces
+            .iter()
+            .map(|f| f.iter().map(|&v| (v, v)).collect())
+            .collect();
+        let color = Color::interpolation(
             self.color_pairs.0.clone(),
             self.color_pairs.1.clone(),
             ratio,
         );
 
-        Object::new(new_verts, self.faces.clone(), color)
+        Object::new(vertexes, faces, normals, color)
     }
 }
 
