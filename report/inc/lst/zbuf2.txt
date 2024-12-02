@@ -1,0 +1,30 @@
+fn draw_triangle(&mut self, mut coords: Vec<(Vertex, f64)>, color: Color) {
+    if coords[0].0.y == coords[1].0.y && coords[1].0.y == coords[2].0.y {
+        return;
+    }
+    coords.sort_by(|a, b| a.0.y.partial_cmp(&b.0.y).expect("draw_triangle: sorting"));
+    let total_height = (coords[2].0.y - coords[0].0.y) as i32;
+    for i in 0..total_height {
+        let is_second_half =
+            (i > (coords[1].0.y - coords[0].0.y) as i32) || (coords[1].0.y == coords[0].0.y);
+        let segment_height = if is_second_half {
+            coords[2].0.y - coords[1].0.y
+        } else {
+            coords[1].0.y - coords[0].0.y
+        };
+        let alpha = i as f64 / total_height as f64;
+        let mut a_side_intensity = coords[0].1 + (coords[2].1 - coords[0].1) * alpha;
+        let beta = if is_second_half {
+            (i as f64 - coords[1].0.y + coords[0].0.y) / segment_height
+        } else {
+            i as f64 / segment_height
+        };
+        let mut a = coords[0].0 + (coords[2].0 - coords[0].0) * alpha;
+        let mut b = if is_second_half {
+            coords[1].0 + (coords[2].0 - coords[1].0) * beta
+        } else {
+            coords[0].0 + (coords[1].0 - coords[0].0) * beta
+        };
+        let mut b_side_intensity = if is_second_half {
+            coords[1].1 + (coords[2].1 - coords[1].1) * beta
+        } else {

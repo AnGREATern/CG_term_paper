@@ -12,34 +12,34 @@ use rfd::FileDialog;
 impl Painting {
     pub fn ui_menus(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
-            ui.menu_button("Load objects", |ui| self.load_obj_nested_menus(ui));
-            ui.menu_button("View", |ui| self.view_nested_menus(ui));
-            ui.menu_button("Pick color", |ui| self.pick_color(ui));
-            ui.menu_button("Move light source", |ui| {
+            ui.menu_button("Загрузить объекты", |ui| self.load_obj_nested_menus(ui));
+            ui.menu_button("Обозреваемый объект", |ui| self.view_nested_menus(ui));
+            ui.menu_button("Выбор цвета", |ui| self.pick_color(ui));
+            ui.menu_button("Перемещение источника света", |ui| {
                 self.move_light_src_nested_menus(ui)
             });
             // ui.menu_button("Move object", |ui| self.move_obj(ui));
-            ui.menu_button("Morphing", |ui| self.morph(ui));
+            ui.menu_button("Морфинг", |ui| self.morph(ui));
         });
     }
 
     fn move_light_src_nested_menus(&mut self, ui: &mut Ui) {
-        if ui.button("Move right").clicked() {
+        if ui.button("Вправо").clicked() {
             let delta = Vertex::new(0.1, 0., 0.);
             self.light_direction.mov(delta);
             self.draw_object();
         }
-        if ui.button("Move left").clicked() {
+        if ui.button("Влево").clicked() {
             let delta = Vertex::new(-0.1, 0., 0.);
             self.light_direction.mov(delta);
             self.draw_object();
         }
-        if ui.button("Move up").clicked() {
+        if ui.button("Вверх").clicked() {
             let delta = Vertex::new(0., -0.1, 0.);
             self.light_direction.mov(delta);
             self.draw_object();
         }
-        if ui.button("Move down").clicked() {
+        if ui.button("Вниз").clicked() {
             let delta = Vertex::new(0.0, 0.1, 0.);
             self.light_direction.mov(delta);
             self.draw_object();
@@ -106,7 +106,7 @@ impl Painting {
                 }
             }
         }
-        if ui.button("Swap objects").clicked() {
+        if ui.button("Поменять объекты местами").clicked() {
             swap(&mut self.start_obj, &mut self.result_obj);
             match self.mode {
                 Mode::StartObjView => self.mode = Mode::ResultObjView,

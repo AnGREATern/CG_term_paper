@@ -20,13 +20,9 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     eframe::run_native(
-        "Morphing",
+        "Морфинг",
         options,
-        Box::new(|_cc| {
-            // // This gives us image support:
-            // egui_extras::install_image_loaders(&cc.egui_ctx);
-
-            Ok(Box::<Painting>::default())
-        }),
+        Box::new(|_cc| Ok(Box::<Painting>::default())
+        ),
     )
 }
