@@ -1,0 +1,30 @@
+                        intersections.push((k2, id2));
+                    } else if k2 > 1. {
+                        edges.add(id2, intersections[1].1);
+                    }
+                }
+                ArcIntersectionResult::L(id1, id2) => {
+                    if id2 == dst_edge.from {
+                        intersections[0].1 = id1;
+                    } else if id2 == dst_edge.to {
+                        intersections[1].1 = id1;
+                    }
+                }
+                ArcIntersectionResult::S => {
+                    is_skip_add = true;
+                    break;
+                }
+                ArcIntersectionResult::N => {}
+            }
+        }
+        if is_skip_add {
+            continue;
+        }
+        intersections.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+        for i in 0..intersections.len() - 1 {
+            edges.add(intersections[i].1, intersections[i + 1].1);
+        }
+    }
+    let mut vertexes_pairs = Vec::new();
+    let mut normals_pairs = Vec::new();
+    let mut vp = (Vertex::default(), Vertex::default());

@@ -1,0 +1,31 @@
+            coords[0].1 + (coords[1].1 - coords[0].1) * beta
+        };
+        a.round();
+        b.round();
+        if a.x > b.x {
+            swap(&mut a, &mut b);
+            swap(&mut a_side_intensity, &mut b_side_intensity);
+        }
+        for j in a.x as i32..=b.x as i32 {
+            let phi = if a.x == b.x {
+                1.
+            } else {
+                (j as f64 - a.x) / (b.x - a.x)
+            };
+            let mut p = a + (b - a) * phi;
+            p.round();
+            let idx = (p.x as u32 + p.y as u32 * self.width) as usize;
+            if idx < self.zbuffer.len() && self.zbuffer[idx] < p.z {
+                self.zbuffer[idx] = p.z;
+                let p_int = a_side_intensity + (b_side_intensity - a_side_intensity) * phi;
+                let mut cur_color = color.clone();
+                cur_color.set_rgb(
+                    (cur_color.r() as f64 * p_int) as u8,
+                    (cur_color.g() as f64 * p_int) as u8,
+                    (cur_color.b() as f64 * p_int) as u8,
+                );
+                self.set_pixel(p.x.round() as u32, p.y.round() as u32, cur_color);
+            }
+        }
+    }
+}

@@ -1,0 +1,30 @@
+            let u1 = sphere_vertexes[src_edge.from].vertex;
+            let u2 = sphere_vertexes[src_edge.to].vertex;
+            let src_arc = Arc::new(u1, u2, src_edge.from, src_edge.to);
+            match Arc::intersect(&src_arc, &dst_arc) {
+                ArcIntersectionResult::T1(index, k) => intersections.push((k, index)),
+                ArcIntersectionResult::T2(index, ..) => {
+                    edges.remove(src_edge);
+                    edges.add(src_edge.from, index);
+                    edges.add(src_edge.to, index);
+                }
+                ArcIntersectionResult::X(vertex, k) => {
+                    let id = sphere_vertexes.len();
+                    sphere_vertexes.push(SphereVertex {
+                        vertex,
+                        origin_id: 0,
+                        index: 0,
+                    });
+                    edges.remove(src_edge);
+                    edges.add(src_edge.from, id);
+                    edges.add(src_edge.to, id);
+                    intersections.push((k, id));
+                }
+                ArcIntersectionResult::I((id1, k1), (id2, k2)) => {
+                    edges.remove(src_edge);
+                    if k1 > 0. {
+                        intersections.push((k1, id1));
+                    } else if k1 < 0. {
+                        edges.add(id1, intersections[0].1);
+                    }
+                    if k2 < 1. {

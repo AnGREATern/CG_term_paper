@@ -1,0 +1,18 @@
+pub fn draw_object(&mut self, object: &Object, mut light_direction: Vertex) {
+    light_direction.normalize();
+    for face_ind in 0..object.nfaces() {
+        let world_coords = object.face_coords(face_ind);
+        let mut intensities = vec![];
+        for normal in object.face_normals(face_ind) {
+            intensities.push(light_direction * normal);
+        }
+        let mut screen_coords = vec![];
+        for i in 0..3 {
+            screen_coords.push((
+                world_coords[i].world_to_screen(self.height, self.width),
+                intensities[i],
+            ));
+        }
+        self.draw_triangle(screen_coords, object.color());
+    }
+}

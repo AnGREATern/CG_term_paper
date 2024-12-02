@@ -1,0 +1,30 @@
+pub fn new(src_proj: Projection, dst_proj: Projection) -> Result<Self, ()> {
+    let n = src_proj.nvertexes();
+    let m = dst_proj.nvertexes();
+    let mut sphere_vertexes = Vec::with_capacity(n + m);
+    let mut edges = EdgeSet::new();
+    for i in 0..n {
+        sphere_vertexes.push(SphereVertex {
+            vertex: src_proj.sphere_vertex(i),
+            index: i,
+            origin_id: 1,
+        });
+    }
+    for i in 0..m {
+        sphere_vertexes.push(SphereVertex {
+            vertex: dst_proj.sphere_vertex(i),
+            index: i,
+            origin_id: 2,
+        });
+    }
+    for src_edge in src_proj.edges_iter() {
+        edges.insert(src_edge);
+    }
+    for dst_edge in dst_proj.edges_iter() {
+        let dst_edge = Edge::new(dst_edge.from + n, dst_edge.to + n);
+        let v1 = sphere_vertexes[dst_edge.from].vertex;
+        let v2 = sphere_vertexes[dst_edge.to].vertex;
+        let dst_arc = Arc::new(v1, v2, dst_edge.from, dst_edge.to);
+        let mut intersections = vec![(0., dst_edge.from), (1., dst_edge.to)];
+        let mut is_skip_add = false;
+        for src_edge in edges.clone().iter() {

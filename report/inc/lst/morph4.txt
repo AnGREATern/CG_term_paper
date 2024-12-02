@@ -1,0 +1,29 @@
+    let mut np = (Vertex::default(), Vertex::default());
+    for vertex in sphere_vertexes.iter() {
+        match vertex.origin_id {
+            1 => {
+                let dst = dst_proj.project_from_sphere(vertex.vertex)?;
+                vp = (src_proj.vertex(vertex.index), dst.0);
+                np = (src_proj.normal(vertex.index), dst.1);
+            }
+            2 => {
+                let src = src_proj.project_from_sphere(vertex.vertex)?;
+                vp = (src.0, dst_proj.vertex(vertex.index));
+                np = (src.1, dst_proj.normal(vertex.index));
+            }
+            _ => {
+                let src = src_proj.project_from_sphere(vertex.vertex)?;
+                let dst = dst_proj.project_from_sphere(vertex.vertex)?;
+                vp = (src.0, dst.0);
+                np = (src.1, dst.1);
+            }
+        };
+        vp.0 -= *src_proj.center();
+        vp.1 -= *dst_proj.center();
+        vertexes_pairs.push(vp);
+        normals_pairs.push(np);
+    }
+    let sphere_vertexes = sphere_vertexes.iter().map(|v| v.vertex).collect();
+    let faces = Self::resolve_faces(&sphere_vertexes, &edges);
+    let mut triangle_faces = Vec::new();
+    let mut set = std::collections::BTreeSet::<Vec<usize>>::new();

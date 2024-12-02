@@ -1,0 +1,29 @@
+    for f in faces.into_iter() {
+        if f.len() > 3 {
+            for i in 1..f.len() - 1 {
+                let mut tri = vec![f[0], f[i], f[i + 1]];
+                tri.sort();
+                if f[0] == f[i] || f[0] == f[i + 1] {
+                    continue;
+                }
+                if set.insert(tri.clone()) {
+                    Self::adjust_order(&mut tri, &sphere_vertexes, Vertex::new(0.0, 0.0, 0.0));
+                    triangle_faces.push(tri);
+                }
+            }
+        } else {
+            let mut tri = f;
+            tri.sort();
+            if set.insert(tri.clone()) {
+                Self::adjust_order(&mut tri, &sphere_vertexes, Vertex::new(0.0, 0.0, 0.0));
+                triangle_faces.push(tri);
+            }
+        }
+    }
+    Ok(Self {
+        vertexes_pairs,
+        normals_pairs,
+        faces: triangle_faces,
+        color_pairs: (src_proj.color().clone(), dst_proj.color().clone()),
+    })
+}
