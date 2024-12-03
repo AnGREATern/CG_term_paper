@@ -162,7 +162,6 @@ impl MergedObject {
                         continue;
                     }
                     if set.insert(tri.clone()) {
-                        Self::adjust_order(&mut tri, &sphere_vertexes, Vertex::new(0.0, 0.0, 0.0));
                         triangle_faces.push(tri);
                     }
                 }
@@ -170,7 +169,6 @@ impl MergedObject {
                 let mut tri = f;
                 tri.sort();
                 if set.insert(tri.clone()) {
-                    Self::adjust_order(&mut tri, &sphere_vertexes, Vertex::new(0.0, 0.0, 0.0));
                     triangle_faces.push(tri);
                 }
             }
@@ -276,21 +274,5 @@ impl MergedObject {
         }
 
         faces
-    }
-
-    fn adjust_order(face: &mut Vec<usize>, verts: &Vec<Vertex>, center: Vertex) {
-        if !Self::check_order(face, verts, center) {
-            face.reverse();
-        }
-    }
-
-    fn check_order(face: &Vec<usize>, verts: &Vec<Vertex>, center: Vertex) -> bool {
-        let n = face.len();
-        if n < 3 {
-            return false;
-        }
-        let face = face.iter().map(|id| verts[*id]).collect::<Vec<_>>();
-
-        Vertex::triple_prod(face[0] - center, face[1] - center, face[2] - center) > EPS
     }
 }

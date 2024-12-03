@@ -4,13 +4,19 @@ use crate::egui::Ui;
 use crate::figure::merged_object::MergedObject;
 use crate::figure::projection::Projection;
 use crate::figure::vertex::Vertex;
-use crate::{DEFAULT_SCALE, SPHERE_RADIUS};
+use crate::{DEFAULT_NOTIFY_DURATION, DEFAULT_SCALE, SPHERE_RADIUS};
 use eframe::egui::Vec2;
+use std::time::Duration;
 
 impl Painting {
     pub fn morph(&mut self, ui: &mut Ui) {
         if ui.button("Запустить").clicked() {
             if self.start_obj.is_none() || self.result_obj.is_none() {
+                self.toasts
+                    .info("Для морфинга нужны 2 модели")
+                    .duration(Some(Duration::from_secs(DEFAULT_NOTIFY_DURATION)))
+                    .closable(true)
+                    .show_progress_bar(true);
                 return;
             }
 
@@ -19,7 +25,11 @@ impl Painting {
             if let Ok(obj) = MergedObject::new(start_proj, result_proj) {
                 self.merged_obj = Some(obj);
             } else {
-                println!("Некорректная модель");
+                self.toasts
+                    .info("Некорректная модель")
+                    .duration(Some(Duration::from_secs(DEFAULT_NOTIFY_DURATION)))
+                    .closable(true)
+                    .show_progress_bar(true);
             }
         }
     }

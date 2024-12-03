@@ -12,13 +12,17 @@ use rfd::FileDialog;
 impl Painting {
     pub fn ui_menus(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
-            ui.menu_button("Загрузить объекты", |ui| self.load_obj_nested_menus(ui));
-            ui.menu_button("Обозреваемый объект", |ui| self.view_nested_menus(ui));
-            ui.menu_button("Выбор цвета", |ui| self.pick_color(ui));
-            ui.menu_button("Перемещение источника света", |ui| {
-                self.move_light_src_nested_menus(ui)
+            ui.menu_button("Загрузить объекты", |ui| {
+                self.load_obj_nested_menus(ui)
             });
-            // ui.menu_button("Move object", |ui| self.move_obj(ui));
+            ui.menu_button("Обозреваемый объект", |ui| {
+                self.view_nested_menus(ui)
+            });
+            ui.menu_button("Выбор цвета", |ui| self.pick_color(ui));
+            ui.menu_button(
+                "Перемещение источника света",
+                |ui| self.move_light_src_nested_menus(ui),
+            );
             ui.menu_button("Морфинг", |ui| self.morph(ui));
         });
     }
@@ -86,8 +90,6 @@ impl Painting {
                     self.start_obj = Some(loading.unwrap());
                     self.mode = Mode::StartObjView;
                     self.draw_object();
-                } else {
-                    println!("{:?}", loading.err());
                 }
             }
         }
@@ -101,8 +103,6 @@ impl Painting {
                     self.result_obj = Some(loading.unwrap());
                     self.mode = Mode::ResultObjView;
                     self.draw_object();
-                } else {
-                    println!("{:?}", loading.err());
                 }
             }
         }

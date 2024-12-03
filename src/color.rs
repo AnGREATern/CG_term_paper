@@ -39,9 +39,12 @@ impl Color {
     }
 
     pub fn interpolation(c1: Color, c2: Color, ratio: f64) -> Color {
-        if ratio < EPS || (ratio - 1.) > EPS {
-            panic!("Incorrect ratio");
+        if ratio < EPS {
+            return c1;
+        } else if (ratio - 1.) > EPS {
+            return c2;
         }
+
         Self(
             (c1.r() as f64 + (c2.r() as f64 - c1.r() as f64) * ratio).round() as u8,
             (c1.g() as f64 + (c2.g() as f64 - c1.g() as f64) * ratio).round() as u8,

@@ -32,7 +32,7 @@ impl Triangle {
         if div.abs() < EPS {
             return None;
         }
-        let t = (a - self.a) * normal / div;
+        let t = ((a - self.a) * normal) / div;
         let v = a + (b - a) * t;
 
         if t > -EPS && self.contains(v) {
@@ -58,6 +58,6 @@ impl Triangle {
         let t2 = s_acv / s_abc;
         let t3 = s_abv / s_abc;
 
-        normals[0] * t1 + normals[1] * t2 + normals[2] * t3
+        (normals[0] * t1) + (normals[1] * t2) + (normals[2] * t3)
     }
 }
