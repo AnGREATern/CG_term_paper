@@ -45,10 +45,6 @@ impl Vertex {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
 
-    pub fn triple_prod(a: Vertex, b: Vertex, c: Vertex) -> f64 {
-        (b ^ c) * a
-    }
-
     pub fn center(vertexes: &Vec<Vertex>) -> Vertex {
         let mut center = Vertex::default();
         for vertex in vertexes.iter() {
@@ -97,43 +93,6 @@ impl Vertex {
         self.y = y3;
         self.z = z2;
     }
-
-    // pub fn bounding_box(verts: &Vec<Self>) -> (Self, Self) {
-    //     let mut bbox = (Self::new(MAX, MAX, MAX), Self::new(MIN, MIN, MIN));
-    //     for v in verts {
-    //         if v.x < bbox.0.x {
-    //             bbox.0.x = v.x
-    //         }
-    //         if v.y < bbox.0.y {
-    //             bbox.0.y = v.y
-    //         }
-    //         if v.z < bbox.0.z {
-    //             bbox.0.z = v.z
-    //         }
-
-    //         if v.x > bbox.1.x {
-    //             bbox.1.x = v.x
-    //         }
-    //         if v.y > bbox.1.y {
-    //             bbox.1.y = v.y
-    //         }
-    //         if v.z > bbox.1.z {
-    //             bbox.1.z = v.z
-    //         }
-    //     }
-
-    //     bbox
-    // }
-
-    // pub fn max(self) -> f64 {
-    //     if self.x > self.y && self.x > self.z {
-    //         self.x
-    //     } else if self.y > self.z {
-    //         self.y
-    //     } else {
-    //         self.z
-    //     }
-    // }
 }
 
 impl Add for Vertex {

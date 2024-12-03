@@ -12,6 +12,7 @@ use crate::figure::merged_object::MergedObject;
 use crate::figure::object::Object;
 use crate::figure::vertex::Vertex;
 use crate::{BACKGROUND_COLOR, EPS, RATIO_STEP, WINDOW_SIZE};
+use egui_notify::Toasts;
 
 enum Mode {
     StartObjView,
@@ -29,6 +30,7 @@ pub struct Painting {
     is_movement_access: bool,
     is_rotating_access: bool,
     light_direction: Vertex,
+    toasts: Toasts,
 }
 
 impl Default for Painting {
@@ -43,6 +45,7 @@ impl Default for Painting {
         let is_movement_access = false;
         let is_rotating_access = false;
         let light_direction = Vertex::new(0., 0., 1.);
+        let toasts = Toasts::default();
         Self {
             mode,
             start_obj,
@@ -54,6 +57,7 @@ impl Default for Painting {
             is_movement_access,
             is_rotating_access,
             light_direction,
+            toasts,
         }
     }
 }
@@ -84,6 +88,7 @@ impl eframe::App for Painting {
                 ctx.request_repaint();
             }
         });
+        self.toasts.show(ctx);
     }
 }
 
@@ -93,7 +98,6 @@ impl Painting {
             ui.allocate_painter(ui.available_size_before_wrap(), Sense::drag());
 
         if self.merged_obj.is_some() {
-            self.canvas.clear();
             if self.ratio.abs() < EPS {
                 self.mode = Mode::StartObjView;
                 self.draw_object();
