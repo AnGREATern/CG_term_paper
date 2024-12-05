@@ -8,3 +8,10 @@ eframe = "0.29.1"
 egui-notify = "0.17.0"
 egui_extras = "0.29.1"
 rfd = "0.15.1"
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[[bench]]
+name = "morph_benchmark"
+harness = false
