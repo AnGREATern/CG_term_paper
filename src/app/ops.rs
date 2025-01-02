@@ -4,7 +4,7 @@ use crate::egui::Ui;
 use crate::figure::merged_object::MergedObject;
 use crate::figure::projection::Projection;
 use crate::figure::vertex::Vertex;
-use crate::{DEFAULT_NOTIFY_DURATION, DEFAULT_SCALE, SPHERE_RADIUS};
+use crate::{DEFAULT_NOTIFY_DURATION, DEFAULT_SCALE, RATIO_STEP, SPHERE_RADIUS};
 use eframe::egui::Vec2;
 use std::time::Duration;
 
@@ -20,10 +20,26 @@ impl Painting {
                 return;
             }
 
-            let start_proj = Projection::new(self.start_obj.clone().unwrap(), SPHERE_RADIUS);
-            let result_proj = Projection::new(self.result_obj.clone().unwrap(), SPHERE_RADIUS);
+            let is_swap = self.start_obj.as_ref().unwrap().nvertexes() < self.result_obj.as_ref().unwrap().nvertexes();
+            let start_proj = if is_swap {
+                Projection::new(self.result_obj.clone().unwrap(), SPHERE_RADIUS)
+            } else {
+                Projection::new(self.start_obj.clone().unwrap(), SPHERE_RADIUS)
+            };
+            let result_proj = if is_swap {
+                Projection::new(self.start_obj.clone().unwrap(), SPHERE_RADIUS)
+            } else {
+                Projection::new(self.result_obj.clone().unwrap(), SPHERE_RADIUS)
+            };
             if let Ok(obj) = MergedObject::new(start_proj, result_proj) {
                 self.merged_obj = Some(obj);
+                if is_swap {
+                    self.step = -RATIO_STEP;
+                    self.ratio = 1.;
+                } else {
+                    self.step = RATIO_STEP;
+                    self.ratio = 0.;
+                }
             } else {
                 self.toasts
                     .info("Некорректная модель")

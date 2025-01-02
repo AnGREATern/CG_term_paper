@@ -25,6 +25,7 @@ pub struct Painting {
     result_obj: Option<Object>,
     merged_obj: Option<MergedObject>,
     ratio: f64,
+    step: f64,
     canvas: Canvas,
     obj_color: Color32,
     is_movement_access: bool,
@@ -40,6 +41,7 @@ impl Default for Painting {
         let result_obj = None;
         let merged_obj = None;
         let ratio = 0.;
+        let step = RATIO_STEP;
         let canvas = Canvas::new(WINDOW_SIZE.0, WINDOW_SIZE.1, Color::new(BACKGROUND_COLOR));
         let obj_color = Color32::WHITE;
         let is_movement_access = false;
@@ -52,6 +54,7 @@ impl Default for Painting {
             result_obj,
             merged_obj,
             ratio,
+            step,
             canvas,
             obj_color,
             is_movement_access,
@@ -67,6 +70,9 @@ impl eframe::App for Painting {
         CentralPanel::default().show(ctx, |ui| {
             self.ui_menus(ui);
             self.ui_canvas(ui);
+            if let Mode::Morphing = self.mode {
+                ctx.request_repaint();
+            }
             ui.input(|i| {
                 for event in &i.raw.events {
                     match event {
@@ -84,9 +90,6 @@ impl eframe::App for Painting {
                     }
                 }
             });
-            if let Mode::Morphing = self.mode {
-                ctx.request_repaint();
-            }
         });
         self.toasts.show(ctx);
     }
@@ -98,23 +101,29 @@ impl Painting {
             ui.allocate_painter(ui.available_size_before_wrap(), Sense::drag());
 
         if self.merged_obj.is_some() {
-            if self.ratio.abs() < EPS {
-                self.mode = Mode::StartObjView;
+            if self.ratio <= 0. {      
+                if self.step < EPS {
+                    self.merged_obj = None;
+                    self.mode = Mode::ResultObjView;
+                } else {
+                    self.mode = Mode::StartObjView;
+                }
                 self.draw_object();
-                self.ratio += RATIO_STEP;
-            } else if self.ratio > 1. {
+            } else if self.ratio >= 1. {
                 self.mode = Mode::ResultObjView;
                 self.draw_object();
-                self.merged_obj = None;
-                self.ratio = 0.;
+                if self.step > EPS {
+                    self.merged_obj = None;
+                }
             } else {
                 self.mode = Mode::Morphing;
+                self.canvas.clear();
                 self.canvas.draw_object(
                     &self.merged_obj.as_ref().unwrap().interpolation(self.ratio),
                     self.light_direction,
                 );
-                self.ratio += RATIO_STEP;
             }
+            self.ratio += self.step;
         }
 
         let image = ColorImage::from_rgba_unmultiplied(
